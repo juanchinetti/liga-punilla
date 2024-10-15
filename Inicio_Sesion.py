@@ -30,24 +30,16 @@ def login():
 
 root = tk.Tk()
 root.title("Inicio de Sesión")
-root.geometry("800x600") 
+root.geometry("1366x768") 
 
 
 root.config(bg="#FF914D")
 
 
-logo_path = r"C:\Users\Usuario\Downloads\visual code\matematica\Liga de Handball Punilla\liga-punilla.png"
-try:
-    image = Image.open(logo_path)  
-    image = image.resize((300, 300), Image.LANCZOS)  
-    logo = ImageTk.PhotoImage(image)
-
-   
-    logo_label = tk.Label(root, image=logo, bg="#FF914D")
-    logo_label.pack(pady=5)  
-except FileNotFoundError:
-    messagebox.showerror("Error", "No se encontró la imagen del logo. Verifica la ruta.")
-
+# Cargar y redimensionar la imagen
+original_image = Image.open("Logo_Handball.png")
+resized_image = original_image.resize((325, 325))
+logo_image = ImageTk.PhotoImage(resized_image)
 
 label_title = tk.Label(root, text="Inicio de Sesión", font=("Arial", 18, "bold"), bg="#FF914D", fg="black")
 label_title.pack(pady=10)  
