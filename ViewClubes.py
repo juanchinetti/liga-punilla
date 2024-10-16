@@ -52,7 +52,7 @@ def volver_menu():
 # Función para abrir el registro de nuevos clubes
 def nuevo_club():
     root.destroy()
-    import registroclubes  # Asegúrate de que registroclubes.py está en el mismo directorio
+    import RegistrarClubes  # Asegúrate de que registroclubes.py está en el mismo directorio
 
 # Función para actualizar el Treeview con los clubes
 def actualizar_treeview():
