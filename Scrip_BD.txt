@@ -19,11 +19,7 @@ CREATE TABLE Generos (
 CREATE TABLE Clubes (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL UNIQUE,
-    logo VARCHAR(255),  -- Almacena la ruta del archivo del logo
-    localidad_id INT,
-    tipo ENUM('Masculino', 'Femenino', 'Mixto') NOT NULL,
-    fecha_fundacion DATE,
-    FOREIGN KEY (localidad_id) REFERENCES Localidades(id)
+    logo VARCHAR(255)  -- Almacena la ruta del archivo del logo
 );
 
 -- Tabla de Jugadores
@@ -80,10 +76,17 @@ INSERT INTO Generos (descripcion) VALUES
 ('Femenino'),
 ('No binario');
 
-INSERT INTO clubes (id, nombre) VALUES 
-(1, 'Club A'),
-(2, 'Club B'), 
-(3, 'Club C');
+-- Insertar nuevos Clubes
+INSERT INTO Clubes (nombre) VALUES
+('Municipalidad Malagueño'),
+('Club Sarmiento'),
+('Club Capilla del Monte'),
+('Unión Huerta Grande'),
+('Universitario Cosquín'),
+('Zona Sur (Córdoba Capital)'),
+('Club Villa Azalain'),
+('Municipalidad Saldan'),
+('Polideportivo Ampliación Matienzo');
 
 -- Insertar Jugadores de Ejemplo
 INSERT INTO Jugadores (nombre, apellido, dni, correo_electronico, fecha_nacimiento, genero_id, localidad_id, club_id) VALUES
