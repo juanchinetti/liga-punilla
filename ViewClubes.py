@@ -1,137 +1,187 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
-from tkinter import ttk
+from tkinter import ttk, messagebox, simpledialog
+import random
 import mysql.connector
 
-# Función para obtener los clubes desde la base de datos
-def obtener_clubes(filtro_genero=None):
+# Función para obtener los clubes de la base de datos según el género seleccionado
+def obtener_clubes(genero):
     try:
-        conn = mysql.connector.connect(
+        conexion = mysql.connector.connect(
             host="localhost",
             user="root",
             password="",
             database="LigaHandball"
         )
-        cursor = conn.cursor()
-        # Modificar la consulta para obtener el nombre, la localidad y el género, y filtrar si se especifica un género
-        if filtro_genero:
-            cursor.execute("""
-                SELECT c.nombre, l.nombre AS localidad, g.descripcion AS genero
-                FROM Clubes c
-                JOIN Localidades l ON c.localidad_id = l.id
-                JOIN Generos g ON c.genero_id = g.id
-                WHERE g.descripcion = %s
-            """, (filtro_genero,))
-        else:
-            cursor.execute("""
-                SELECT c.nombre, l.nombre AS localidad, g.descripcion AS genero
-                FROM Clubes c
-                JOIN Localidades l ON c.localidad_id = l.id
-                JOIN Generos g ON c.genero_id = g.id
-            """)
-        clubes_bd = cursor.fetchall()
-        conn.close()
-        return clubes_bd
-    except mysql.connector.Error as e:
-        messagebox.showerror("Error", f"No se pudo obtener la lista de clubes: {e}")
+        cursor = conexion.cursor()
+        # Filtrar los clubes por género
+        consulta = """
+            SELECT nombre FROM Clubes 
+            WHERE genero_id = (SELECT id FROM Generos WHERE descripcion = %s)
+        """
+        cursor.execute(consulta, (genero,))
+        clubes = [fila[0] for fila in cursor.fetchall()]
+        conexion.close()
+        return clubes
+    except mysql.connector.Error as err:
+        messagebox.showerror("Error", f"No se pudieron obtener los clubes: {err}")
         return []
 
-# Función para modificar un club seleccionado
-def modificar_club():
-    selected_club_index = arbol.selection()
-    if selected_club_index:
-        club_actual = arbol.item(selected_club_index[0])['values'][0]
-        nuevo_nombre = simpledialog.askstring("Modificar Club", "Ingrese el nuevo nombre del club:", initialvalue=club_actual)
-        if nuevo_nombre:
-            try:
-                conn = mysql.connector.connect(
-                    host="localhost",
-                    user="root",
-                    password="",
-                    database="LigaHandball"
-                )
-                cursor = conn.cursor()
-                cursor.execute("UPDATE Clubes SET nombre = %s WHERE nombre = %s", (nuevo_nombre, club_actual))
-                conn.commit()
-                conn.close()
-                actualizar_treeview()
-                messagebox.showinfo("Éxito", "El nombre del club ha sido modificado con éxito.")
-            except mysql.connector.Error as e:
-                messagebox.showerror("Error", f"No se pudo modificar el club: {e}")
+# Generar el fixture automáticamente
+def generar_fixture():
+    # Obtener el género seleccionado
+    genero = combobox_genero.get()
+    if genero == "Seleccione":
+        messagebox.showwarning("Advertencia", "Por favor, seleccione un género para generar el fixture.")
+        return
 
-# Función para volver al menú principal
-def volver_menu():
-    root.destroy()
-    import Menu  # Asegúrate de que Menu.py está en el mismo directorio
+    # Obtener los clubes del género seleccionado
+    clubes = obtener_clubes(genero)
+    if len(clubes) < 2:
+        messagebox.showwarning("Advertencia", "Debe haber al menos 2 clubes para generar el fixture.")
+        return
 
-# Función para abrir el registro de nuevos clubes
-def nuevo_club():
-    root.destroy()
-    import RegistrarClubes  # Asegúrate de que registroclubes.py está en el mismo directorio
+    fixture.clear()
 
-# Función para actualizar el Treeview con los clubes
-def actualizar_treeview():
+    # Asegurar que el número de clubes sea par agregando un "descanso" si es necesario
+    if len(clubes) % 2 != 0:
+        clubes.append("Descanso")
+
+    # Determinar el grupo según el género
+    grupo = "A" if genero == "Masculino" else "B"
+
+    # Generar 18 jornadas
+    num_jornadas = 18
+    num_partidos_por_jornada = 4
+
+    for jornada in range(1, num_jornadas + 1):
+        partidos = []
+        random.shuffle(clubes)  # Mezclar los clubes para los partidos
+
+        # Generar los partidos para la jornada
+        for i in range(0, len(clubes), 2):
+            if i + 1 < len(clubes):
+                club1 = clubes[i]
+                club2 = clubes[i + 1]
+                if "Descanso" not in (club1, club2):  # No generar partidos con "Descanso"
+                    fecha = f"2024-{jornada:02d}-01"  # Ejemplo de fecha por cada jornada
+                    resultado = "-"
+                    partidos.append((grupo, f"Jornada {jornada} ({fecha})", club1, club2, resultado))
+
+        # Verificar que haya 4 partidos en la jornada
+        while len(partidos) < num_partidos_por_jornada:
+            # Si no hay suficientes partidos, agregar partidos aleatorios (evitando duplicados)
+            club1, club2 = random.sample(clubes[:-1], 2)  # No elegir "Descanso"
+            if (grupo, f"Jornada {jornada} ({fecha})", club1, club2, "-") not in partidos:
+                partidos.append((grupo, f"Jornada {jornada} ({fecha})", club1, club2, "-"))
+
+        # Agregar un espacio en blanco para separar las jornadas
+        fixture.extend(partidos)
+        fixture.append(("", "", "", "", ""))
+
+    actualizar_fixture()
+
+# Función para actualizar la grilla con los datos del fixture
+def actualizar_fixture():
     for item in arbol.get_children():
         arbol.delete(item)
-    filtro_genero = combobox_genero.get()
-    if filtro_genero == "Todos":
-        filtro_genero = None
-    clubes_bd = obtener_clubes(filtro_genero)  # Obtener clubes desde la base de datos con filtro de género
-    for club in clubes_bd:
-        arbol.insert("", "end", values=(club[0], club[1], club[2]))
+    for partido in fixture:
+        arbol.insert("", "end", values=partido)
+
+# Función para guardar los partidos generados en la base de datos
+def guardar_fixture():
+    try:
+        conexion = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="LigaHandball"
+        )
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM Encuentros")  # Limpiar la tabla antes de guardar el nuevo fixture
+        for partido in fixture:
+            if partido[0]:  # Solo guardar partidos válidos (no las filas en blanco)
+                consulta = """
+                    INSERT INTO Encuentros (grupo, jornada, club1, club2, resultado)
+                    VALUES (%s, %s, %s, %s, %s)
+                """
+                cursor.execute(consulta, partido)
+        conexion.commit()
+        conexion.close()
+        messagebox.showinfo("Éxito", "El fixture ha sido guardado en la base de datos.")
+    except mysql.connector.Error as err:
+        messagebox.showerror("Error", f"Error al guardar el fixture en la base de datos: {err}")
+
+# Función para editar el resultado seleccionado en el Treeview
+def editar_resultado(event):
+    item_seleccionado = arbol.selection()
+    if not item_seleccionado:
+        return
+    item_id = item_seleccionado[0]
+    valores = arbol.item(item_id, "values")
+
+    nuevo_resultado = simpledialog.askstring("Editar Resultado", "Ingrese el nuevo resultado:", initialvalue=valores[4])
+    if nuevo_resultado:
+        arbol.item(item_id, values=(valores[0], valores[1], valores[2], valores[3], nuevo_resultado))
+        # Actualizar también en la lista fixture
+        index = arbol.index(item_id)
+        fixture[index] = (valores[0], valores[1], valores[2], valores[3], nuevo_resultado)
 
 # Crear la ventana principal
 root = tk.Tk()
-root.title("Lista de Clubes")
-root.geometry("1366x768")  # Tamaño de la ventana
+root.title("Fixture de la Liga de Handball")
+root.geometry("1365x768")
 root.configure(bg="#ff7700")
 
-# Crear un Label
-label = tk.Label(root, text="Clubes Registrados", font=("Calibri", 24), bg="#ff7700")
+# Crear un Label para el título
+label = tk.Label(root, text="Fixture de la Liga de Handball", font=("Calibri", 24), bg="#ff7700")
 label.pack(pady=(20, 10))
 
-# Crear un Treeview para mostrar los clubes
-arbol = ttk.Treeview(root, columns=("nombre", "localidad", "genero"), show="headings")
-arbol.pack(pady=(10, 20), expand=True, fill='both')
+# Crear un Treeview para mostrar el fixture
+arbol = ttk.Treeview(root, columns=("grupo", "jornada", "club1", "club2", "resultado"), show="headings")
+arbol.pack(pady=(10, 20), fill="both", expand=True)
 
 # Definir encabezados
-arbol.heading("nombre", text="Nombre del Club")
-arbol.heading("localidad", text="Localidad")
-arbol.heading("genero", text="Género")
-arbol.column("nombre", anchor='center', width=400)
-arbol.column("localidad", anchor='center', width=300)
-arbol.column("genero", anchor='center', width=200)
+arbol.heading("grupo", text="Grupo")
+arbol.heading("jornada", text="Jornada (Fecha)")
+arbol.heading("club1", text="Club 1")
+arbol.heading("club2", text="Club 2")
+arbol.heading("resultado", text="Resultado")
 
-# Crear un Combobox para filtrar por género
+# Configurar el ancho de las columnas
+arbol.column("grupo", anchor='center', width=80)
+arbol.column("jornada", anchor='center', width=150)
+arbol.column("club1", anchor='center', width=150)
+arbol.column("club2", anchor='center', width=150)
+arbol.column("resultado", anchor='center', width=100)
+
+# Estilos para el Treeview
+style = ttk.Style()
+style.configure("Treeview", font=("Calibri", 12), rowheight=25)
+style.configure("Treeview.Heading", font=("Calibri", 14, "bold"))
+
+# Combobox para seleccionar el género
 frame_filtro = tk.Frame(root, bg="#ff7700")
 frame_filtro.pack(pady=(10, 0))
 
-tk.Label(frame_filtro, text="Filtrar por género:", font=("Calibri", 18), bg="#ff7700").pack(side=tk.LEFT, padx=10)
+tk.Label(frame_filtro, text="Género:", font=("Calibri", 18), bg="#ff7700").pack(side=tk.LEFT, padx=10)
 
-combobox_genero = ttk.Combobox(frame_filtro, values=["Todos", "Masculino", "Femenino"], state="readonly", font=("Calibri", 18))
+combobox_genero = ttk.Combobox(frame_filtro, values=["Seleccione", "Masculino", "Femenino"], state="readonly", font=("Calibri", 18))
 combobox_genero.current(0)
 combobox_genero.pack(side=tk.LEFT)
 
-# Botón para aplicar el filtro
-button_filtrar = tk.Button(frame_filtro, text="Aplicar Filtro", font=("Calibri", 18), bg="#d3d3d3", command=actualizar_treeview)
-button_filtrar.pack(side=tk.LEFT, padx=10)
+# Botón para crear fixture
+button_crear_fixture = tk.Button(root, text="Crear Fixture", font=("Calibri", 18), bg="#d3d3d3", command=generar_fixture)
+button_crear_fixture.pack(pady=(10, 20))
 
-# Llenar el Treeview con los clubes existentes
-actualizar_treeview()
+# Botón para guardar cambios
+button_guardar = tk.Button(root, text="Guardar Fixture", font=("Calibri", 18), bg="#d3d3d3", command=guardar_fixture)
+button_guardar.pack()
 
-# Crear un Frame para los botones
-button_frame = tk.Frame(root, bg="#ff7700")
-button_frame.pack(pady=(20, 20))
+# Conectar evento de doble clic para editar el resultado
+arbol.bind("<Double-1>", editar_resultado)
 
-# Crear botones
-button_volver = tk.Button(button_frame, text="Volver", font=("Calibri", 24), bg="#d3d3d3", command=volver_menu)
-button_volver.pack(side=tk.LEFT, padx=(0, 20))
-
-button_nuevo = tk.Button(button_frame, text="Nuevo", font=("Calibri", 24), bg="#d3d3d3", command=nuevo_club)
-button_nuevo.pack(side=tk.LEFT, padx=(0, 20))
-
-button_modificar = tk.Button(button_frame, text="Modificar", font=("Calibri", 24), bg="#d3d3d3", command=modificar_club)
-button_modificar.pack(side=tk.LEFT)
+# Lista global para el fixture
+fixture = []
 
 # Ejecutar la aplicación
 root.mainloop()

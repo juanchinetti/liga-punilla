@@ -3,8 +3,8 @@ from tkinter import ttk, messagebox
 import random
 import mysql.connector
 
-# Conectar a la base de datos y obtener los nombres de los clubes
-def obtener_clubes():
+# Función para obtener los clubes de la base de datos según el género seleccionado
+def obtener_clubes(genero):
     try:
         conexion = mysql.connector.connect(
             host="localhost",
@@ -13,7 +13,12 @@ def obtener_clubes():
             database="LigaHandball"
         )
         cursor = conexion.cursor()
-        cursor.execute("SELECT nombre FROM Clubes")  # Asumiendo que la tabla se llama 'Clubes' y tiene una columna 'nombre'
+        # Filtrar los clubes por género
+        consulta = """
+            SELECT nombre FROM Clubes 
+            WHERE genero_id = (SELECT id FROM Generos WHERE descripcion = %s)
+        """
+        cursor.execute(consulta, (genero,))
         clubes = [fila[0] for fila in cursor.fetchall()]
         conexion.close()
         return clubes
@@ -23,25 +28,48 @@ def obtener_clubes():
 
 # Generar el fixture automáticamente
 def generar_fixture():
-    # Obtener los clubes de la base de datos
-    clubes = obtener_clubes()
+    # Obtener el género seleccionado
+    genero = combobox_genero.get()
+    if genero == "Seleccione":
+        messagebox.showwarning("Advertencia", "Por favor, seleccione un género para generar el fixture.")
+        return
+
+    # Obtener los clubes del género seleccionado
+    clubes = obtener_clubes(genero)
     if len(clubes) < 2:
         messagebox.showwarning("Advertencia", "Debe haber al menos 2 clubes para generar el fixture.")
         return
 
     fixture.clear()
 
-    # Generar 18 jornadas, cada club juega 2 veces por jornada
-    for jornada in range(1, 19):
+    # Asegurar que el número de clubes sea par agregando un "descanso" si es necesario
+    if len(clubes) % 2 != 0:
+        clubes.append("Descanso")
+
+    # Generar 18 jornadas
+    num_jornadas = 18
+    num_partidos_por_jornada = 4
+
+    for jornada in range(1, num_jornadas + 1):
         partidos = []
         random.shuffle(clubes)  # Mezclar los clubes para los partidos
+
+        # Generar los partidos para la jornada
         for i in range(0, len(clubes), 2):
             if i + 1 < len(clubes):
                 club1 = clubes[i]
                 club2 = clubes[i + 1]
-                fecha = f"2024-{jornada:02d}-01"  # Ejemplo de fecha por cada jornada
-                resultado = ""
-                partidos.append((f"Jornada {jornada} ({fecha})", club1, club2, resultado))
+                if "Descanso" not in (club1, club2):  # No generar partidos con "Descanso"
+                    fecha = f"2024-{jornada:02d}-01"  # Ejemplo de fecha por cada jornada
+                    resultado = ""
+                    partidos.append((f"Jornada {jornada} ({fecha})", club1, club2, resultado))
+
+        # Verificar que haya 4 partidos en la jornada
+        while len(partidos) < num_partidos_por_jornada:
+            # Si no hay suficientes partidos, agregar partidos aleatorios (evitando duplicados)
+            club1, club2 = random.sample(clubes[:-1], 2)  # No elegir "Descanso"
+            if (f"Jornada {jornada} ({fecha})", club1, club2, "") not in partidos:
+                partidos.append((f"Jornada {jornada} ({fecha})", club1, club2, ""))
 
         # Agregar un espacio en blanco para separar las jornadas
         fixture.extend(partidos)
@@ -61,8 +89,8 @@ def guardar_fixture():
     try:
         conexion = mysql.connector.connect(
             host="localhost",
-            user="tu_usuario",
-            password="tu_contraseña",
+            user="root",
+            password="",
             database="LigaHandball"
         )
         cursor = conexion.cursor()
@@ -110,6 +138,16 @@ arbol.column("resultado", anchor='center', width=100)
 style = ttk.Style()
 style.configure("Treeview", font=("Calibri", 12), rowheight=25)
 style.configure("Treeview.Heading", font=("Calibri", 14, "bold"))
+
+# Combobox para seleccionar el género
+frame_filtro = tk.Frame(root, bg="#ff7700")
+frame_filtro.pack(pady=(10, 0))
+
+tk.Label(frame_filtro, text="Género:", font=("Calibri", 18), bg="#ff7700").pack(side=tk.LEFT, padx=10)
+
+combobox_genero = ttk.Combobox(frame_filtro, values=["Seleccione", "Masculino", "Femenino"], state="readonly", font=("Calibri", 18))
+combobox_genero.current(0)
+combobox_genero.pack(side=tk.LEFT)
 
 # Botón para crear fixture
 button_crear_fixture = tk.Button(root, text="Crear Fixture", font=("Calibri", 18), bg="#d3d3d3", command=generar_fixture)
