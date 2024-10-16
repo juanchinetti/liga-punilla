@@ -4,7 +4,7 @@ from tkinter import ttk
 import mysql.connector
 
 # Función para obtener los clubes desde la base de datos
-def obtener_clubes():
+def obtener_clubes(filtro_genero=None):
     try:
         conn = mysql.connector.connect(
             host="localhost",
@@ -13,8 +13,23 @@ def obtener_clubes():
             database="LigaHandball"
         )
         cursor = conn.cursor()
-        cursor.execute("SELECT nombre FROM Clubes")
-        clubes_bd = [row[0] for row in cursor.fetchall()]
+        # Modificar la consulta para obtener el nombre, la localidad y el género, y filtrar si se especifica un género
+        if filtro_genero:
+            cursor.execute("""
+                SELECT c.nombre, l.nombre AS localidad, g.descripcion AS genero
+                FROM Clubes c
+                JOIN Localidades l ON c.localidad_id = l.id
+                JOIN Generos g ON c.genero_id = g.id
+                WHERE g.descripcion = %s
+            """, (filtro_genero,))
+        else:
+            cursor.execute("""
+                SELECT c.nombre, l.nombre AS localidad, g.descripcion AS genero
+                FROM Clubes c
+                JOIN Localidades l ON c.localidad_id = l.id
+                JOIN Generos g ON c.genero_id = g.id
+            """)
+        clubes_bd = cursor.fetchall()
         conn.close()
         return clubes_bd
     except mysql.connector.Error as e:
@@ -58,9 +73,12 @@ def nuevo_club():
 def actualizar_treeview():
     for item in arbol.get_children():
         arbol.delete(item)
-    clubes_bd = obtener_clubes()  # Obtener clubes desde la base de datos
+    filtro_genero = combobox_genero.get()
+    if filtro_genero == "Todos":
+        filtro_genero = None
+    clubes_bd = obtener_clubes(filtro_genero)  # Obtener clubes desde la base de datos con filtro de género
     for club in clubes_bd:
-        arbol.insert("", "end", values=(club,))
+        arbol.insert("", "end", values=(club[0], club[1], club[2]))
 
 # Crear la ventana principal
 root = tk.Tk()
@@ -73,19 +91,37 @@ label = tk.Label(root, text="Clubes Registrados", font=("Calibri", 24), bg="#ff7
 label.pack(pady=(20, 10))
 
 # Crear un Treeview para mostrar los clubes
-arbol = ttk.Treeview(root, columns=("nombre",), show="headings")
-arbol.pack(pady=(10, 20))
+arbol = ttk.Treeview(root, columns=("nombre", "localidad", "genero"), show="headings")
+arbol.pack(pady=(10, 20), expand=True, fill='both')
 
 # Definir encabezados
 arbol.heading("nombre", text="Nombre del Club")
-arbol.column("nombre", anchor='center', width=300)
+arbol.heading("localidad", text="Localidad")
+arbol.heading("genero", text="Género")
+arbol.column("nombre", anchor='center', width=400)
+arbol.column("localidad", anchor='center', width=300)
+arbol.column("genero", anchor='center', width=200)
+
+# Crear un Combobox para filtrar por género
+frame_filtro = tk.Frame(root, bg="#ff7700")
+frame_filtro.pack(pady=(10, 0))
+
+tk.Label(frame_filtro, text="Filtrar por género:", font=("Calibri", 18), bg="#ff7700").pack(side=tk.LEFT, padx=10)
+
+combobox_genero = ttk.Combobox(frame_filtro, values=["Todos", "Masculino", "Femenino"], state="readonly", font=("Calibri", 18))
+combobox_genero.current(0)
+combobox_genero.pack(side=tk.LEFT)
+
+# Botón para aplicar el filtro
+button_filtrar = tk.Button(frame_filtro, text="Aplicar Filtro", font=("Calibri", 18), bg="#d3d3d3", command=actualizar_treeview)
+button_filtrar.pack(side=tk.LEFT, padx=10)
 
 # Llenar el Treeview con los clubes existentes
 actualizar_treeview()
 
 # Crear un Frame para los botones
 button_frame = tk.Frame(root, bg="#ff7700")
-button_frame.pack(pady=(10, 20))
+button_frame.pack(pady=(20, 20))
 
 # Crear botones
 button_volver = tk.Button(button_frame, text="Volver", font=("Calibri", 24), bg="#d3d3d3", command=volver_menu)
