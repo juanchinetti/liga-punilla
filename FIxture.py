@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 import random
 import mysql.connector
 
@@ -46,6 +46,9 @@ def generar_fixture():
     if len(clubes) % 2 != 0:
         clubes.append("Descanso")
 
+    # Determinar el grupo según el género
+    grupo = "A" if genero == "Masculino" else "B"
+
     # Generar 18 jornadas
     num_jornadas = 18
     num_partidos_por_jornada = 4
@@ -61,19 +64,19 @@ def generar_fixture():
                 club2 = clubes[i + 1]
                 if "Descanso" not in (club1, club2):  # No generar partidos con "Descanso"
                     fecha = f"2024-{jornada:02d}-01"  # Ejemplo de fecha por cada jornada
-                    resultado = ""
-                    partidos.append((f"Jornada {jornada} ({fecha})", club1, club2, resultado))
+                    resultado = "-"
+                    partidos.append((grupo, f"Jornada {jornada} ({fecha})", club1, club2, resultado))
 
         # Verificar que haya 4 partidos en la jornada
         while len(partidos) < num_partidos_por_jornada:
             # Si no hay suficientes partidos, agregar partidos aleatorios (evitando duplicados)
             club1, club2 = random.sample(clubes[:-1], 2)  # No elegir "Descanso"
-            if (f"Jornada {jornada} ({fecha})", club1, club2, "") not in partidos:
-                partidos.append((f"Jornada {jornada} ({fecha})", club1, club2, ""))
+            if (grupo, f"Jornada {jornada} ({fecha})", club1, club2, "-") not in partidos:
+                partidos.append((grupo, f"Jornada {jornada} ({fecha})", club1, club2, "-"))
 
         # Agregar un espacio en blanco para separar las jornadas
         fixture.extend(partidos)
-        fixture.append(("", "", "", ""))
+        fixture.append(("", "", "", "", ""))
 
     actualizar_fixture()
 
@@ -98,8 +101,8 @@ def guardar_fixture():
         for partido in fixture:
             if partido[0]:  # Solo guardar partidos válidos (no las filas en blanco)
                 consulta = """
-                    INSERT INTO Encuentros (jornada, club1, club2, resultado)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO Encuentros (grupo, jornada, club1, club2, resultado)
+                    VALUES (%s, %s, %s, %s, %s)
                 """
                 cursor.execute(consulta, partido)
         conexion.commit()
@@ -107,6 +110,21 @@ def guardar_fixture():
         messagebox.showinfo("Éxito", "El fixture ha sido guardado en la base de datos.")
     except mysql.connector.Error as err:
         messagebox.showerror("Error", f"Error al guardar el fixture en la base de datos: {err}")
+
+# Función para editar el resultado seleccionado en el Treeview
+def editar_resultado(event):
+    item_seleccionado = arbol.selection()
+    if not item_seleccionado:
+        return
+    item_id = item_seleccionado[0]
+    valores = arbol.item(item_id, "values")
+
+    nuevo_resultado = simpledialog.askstring("Editar Resultado", "Ingrese el nuevo resultado:", initialvalue=valores[4])
+    if nuevo_resultado:
+        arbol.item(item_id, values=(valores[0], valores[1], valores[2], valores[3], nuevo_resultado))
+        # Actualizar también en la lista fixture
+        index = arbol.index(item_id)
+        fixture[index] = (valores[0], valores[1], valores[2], valores[3], nuevo_resultado)
 
 # Crear la ventana principal
 root = tk.Tk()
@@ -119,16 +137,18 @@ label = tk.Label(root, text="Fixture de la Liga de Handball", font=("Calibri", 2
 label.pack(pady=(20, 10))
 
 # Crear un Treeview para mostrar el fixture
-arbol = ttk.Treeview(root, columns=("jornada", "club1", "club2", "resultado"), show="headings")
+arbol = ttk.Treeview(root, columns=("grupo", "jornada", "club1", "club2", "resultado"), show="headings")
 arbol.pack(pady=(10, 20), fill="both", expand=True)
 
 # Definir encabezados
+arbol.heading("grupo", text="Grupo")
 arbol.heading("jornada", text="Jornada (Fecha)")
 arbol.heading("club1", text="Club 1")
 arbol.heading("club2", text="Club 2")
 arbol.heading("resultado", text="Resultado")
 
 # Configurar el ancho de las columnas
+arbol.column("grupo", anchor='center', width=80)
 arbol.column("jornada", anchor='center', width=150)
 arbol.column("club1", anchor='center', width=150)
 arbol.column("club2", anchor='center', width=150)
@@ -156,6 +176,9 @@ button_crear_fixture.pack(pady=(10, 20))
 # Botón para guardar cambios
 button_guardar = tk.Button(root, text="Guardar Fixture", font=("Calibri", 18), bg="#d3d3d3", command=guardar_fixture)
 button_guardar.pack()
+
+# Conectar evento de doble clic para editar el resultado
+arbol.bind("<Double-1>", editar_resultado)
 
 # Lista global para el fixture
 fixture = []
