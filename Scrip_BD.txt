@@ -47,6 +47,13 @@ CREATE TABLE Jugadores (
     FOREIGN KEY (club_id) REFERENCES Clubes(id)
 );
 
+-- Crear la tabla Usuarios
+CREATE TABLE Usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
 -- Insertar datos en la tabla Localidades
 INSERT INTO Localidades (nombre) VALUES 
 ('Bialet Massé'), 
@@ -111,3 +118,6 @@ INSERT INTO Jugadores (nombre, apellido, dni, correo_electronico, fecha_nacimien
 ('Maria', 'González', '87654321', 'maria.gonzalez@example.com', '1998-08-22', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 2),
 ('Luis', 'Martínez', '11223344', 'luis.martinez@example.com', '2002-03-30', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 3),
 ('Ana', 'Lopez', '44332211', 'ana.lopez@example.com', '1999-11-11', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 4);
+
+-- Insertar el usuario "Karina" con la contraseña "Punilla2018"
+INSERT INTO Usuarios (username, password) VALUES ('Karina', 'Punilla2018');
