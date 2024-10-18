@@ -20,7 +20,8 @@ def validar_campos():
     dni = entry_dni.get()
     domicilio = entry_domicilio.get()
     telefono = entry_telefono.get()
-    email = entry_email.get()
+    fecha_nacimiento = entry_fecha_nacimiento.get()
+    correo = entry_correo.get()
 
     if not re.match("^[A-Za-z]+$", nombre):
         messagebox.showerror("Error", "Por favor, escriba su nombre como está en el DNI")
@@ -37,19 +38,14 @@ def validar_campos():
     if not re.match("^[0-9]+$", telefono):
         messagebox.showerror("Error", "Por favor, escriba su teléfono como está en el DNI")
         return False
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+    if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", correo):
         messagebox.showerror("Error", "Por favor, ingrese un correo electrónico válido")
         return False
 
-    return True
+    if messagebox.askyesno("Confirmación", "¿Está seguro que desea guardar?"):
+        messagebox.showinfo("Éxito", "Datos guardados exitosamente ⚽") 
 
-def confirmar_guardar():
-    if validar_campos():
-        respuesta = messagebox.askyesno("Confirmación", "¿Está seguro que desea guardar?")
-        if respuesta:
-            # Aquí puedes agregar la lógica para guardar los datos en la base de datos
-            messagebox.showinfo("Éxito", "Los datos se guardaron exitosamente ✅")
-            borrar_datos()
+    return True
 
 def borrar_datos():
     entry_nombre.delete(0, tk.END)
@@ -57,7 +53,8 @@ def borrar_datos():
     entry_dni.delete(0, tk.END)
     entry_domicilio.delete(0, tk.END)
     entry_telefono.delete(0, tk.END)
-    entry_email.delete(0, tk.END)
+    entry_fecha_nacimiento.delete(0, tk.END)
+    entry_correo.delete(0, tk.END)
     sexo_combo.set('')
     localidad_combo.set('')
     club_combo.set('')
@@ -107,21 +104,25 @@ entry_telefono = tk.Entry(frame, width=30)
 entry_telefono.grid(row=5, column=1, pady=5)
 entry_telefono.bind("<KeyPress>", solo_numeros)
 
-tk.Label(frame, text="Email", bg="#ff7f00", fg="white").grid(row=6, column=0, sticky="e", padx=10, pady=5)
-entry_email = tk.Entry(frame, width=30)
-entry_email.grid(row=6, column=1, pady=5)
+tk.Label(frame, text="Fecha de Nacimiento", bg="#ff7f00", fg="white").grid(row=6, column=0, sticky="e", padx=10, pady=5)
+entry_fecha_nacimiento = tk.Entry(frame, width=30) 
+entry_fecha_nacimiento.grid(row=6, column=1, pady=5)
 
-tk.Label(frame, text="Género", bg="#ff7f00", fg="white").grid(row=7, column=0, sticky="e", padx=10, pady=5)
+tk.Label(frame, text="Correo Electrónico", bg="#ff7f00", fg="white").grid(row=7, column=0, sticky="e", padx=10, pady=5)
+entry_correo = tk.Entry(frame, width=30)  
+entry_correo.grid(row=7, column=1, pady=5)
+
+tk.Label(frame, text="Género", bg="#ff7f00", fg="white").grid(row=8, column=0, sticky="e", padx=10, pady=5)
 sexo_combo = ttk.Combobox(frame, values=["Masculino", "Femenino"], width=28, state='readonly')
-sexo_combo.grid(row=7, column=1, pady=5)
+sexo_combo.grid(row=8, column=1, pady=5)
 
-tk.Label(frame, text="Localidad", bg="#ff7f00", fg="white").grid(row=8, column=0, sticky="e", padx=10, pady=5)
+tk.Label(frame, text="Localidad", bg="#ff7f00", fg="white").grid(row=9, column=0, sticky="e", padx=10, pady=5)
 localidad_combo = ttk.Combobox(frame, values=["Localidad 1", "Localidad 2", "Localidad 3"], width=28, state='readonly')
-localidad_combo.grid(row=8, column=1, pady=5)
+localidad_combo.grid(row=9, column=1, pady=5)
 
-tk.Label(frame, text="Club", bg="#ff7f00", fg="white").grid(row=9, column=0, sticky="e", padx=10, pady=5)
+tk.Label(frame, text="Club", bg="#ff7f00", fg="white").grid(row=10, column=0, sticky="e", padx=10, pady=5)
 club_combo = ttk.Combobox(frame, values=["Club A", "Club B", "Club C"], width=28, state='readonly')
-club_combo.grid(row=9, column=1, pady=5)
+club_combo.grid(row=10, column=1, pady=5)
 
 ficha_medica_label = tk.Label(frame, text="Ficha Médica", bg="#ff7f00", fg="white")
 ficha_medica_label.grid(row=1, column=3, padx=10, pady=5)
@@ -140,13 +141,12 @@ carnet_img_label.grid(row=5, column=3, padx=10, pady=5)
 tk.Button(frame, text="Subir", command=lambda: cargar_imagen(carnet_img_label), bg="grey").grid(row=6, column=3, padx=10, pady=5)
 
 cancelar_btn = tk.Button(frame, text="Cancelar", bg="red", fg="white", width=10, command=borrar_datos)
-cancelar_btn.grid(row=10, column=0, pady=20)
+cancelar_btn.grid(row=11, column=0, pady=20)
 
-guardar_btn = tk.Button(frame, text="Guardar", bg="green", fg="white", width=10, command=confirmar_guardar)
-guardar_btn.grid(row=10, column=1, pady=20)
+guardar_btn = tk.Button(frame, text="Guardar", bg="green", fg="white", width=10, command=validar_campos)
+guardar_btn.grid(row=11, column=1, pady=20)
 
 volver_menu_btn = tk.Button(frame, text="Volver", bg="lightblue", fg="black", width=10)
-volver_menu_btn.grid(row=10, column=2, pady=20)
+volver_menu_btn.grid(row=11, column=2, pady=20)
 
 root.mainloop()
-
