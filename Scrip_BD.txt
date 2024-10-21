@@ -140,5 +140,14 @@ INSERT INTO Clubes (nombre, genero_id, localidad_id, grupo) VALUES
 ('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande'), 'B'),
 ('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'), 'B');
 
+-- Clubes masculinos
+INSERT INTO Clubes (nombre, genero_id, localidad_id, grupo) VALUES
+('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 'A'),
+('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 'A'),
+('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'A'),
+('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 'A'),
+('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande'), 'A'),
+('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'), 'A');
+
 -- Insertar el usuario "Karina" con la contraseña "Punilla2018"
 INSERT INTO Usuarios (username, password) VALUES ('Karina', 'Punilla2018');
