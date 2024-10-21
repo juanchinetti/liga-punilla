@@ -27,7 +27,7 @@ CREATE TABLE Clubes (
     logo VARCHAR(255),  -- Almacena la ruta del archivo del logo
     FOREIGN KEY (genero_id) REFERENCES Generos(id),
     FOREIGN KEY (localidad_id) REFERENCES Localidades(id),
-    UNIQUE (nombre, genero_id, localidad_id) -- Restricción única para distinguir clubes por nombre, género y localidad
+    UNIQUE (nombre, genero_id, localidad_id)
 );
 
 -- Crear la tabla de Jugadores
@@ -35,14 +35,14 @@ CREATE TABLE Jugadores (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    dni VARCHAR(10) NOT NULL UNIQUE,  -- Limitar a 10 caracteres para evitar datos inconsistentes
+    dni VARCHAR(10) NOT NULL UNIQUE,
     correo_electronico VARCHAR(100) UNIQUE,
     fecha_nacimiento DATE NOT NULL,
     genero_id INT NOT NULL,
     localidad_id INT NOT NULL,
     club_id INT,
-    ficha_medica_activa BOOLEAN NOT NULL DEFAULT 0,  -- Indicador de ficha médica activa
-    carnet VARCHAR(255),  -- Almacena la ruta del archivo del carnet
+    ficha_medica_activa BOOLEAN NOT NULL DEFAULT 0,
+    carnet VARCHAR(255),
     FOREIGN KEY (genero_id) REFERENCES Generos(id),
     FOREIGN KEY (localidad_id) REFERENCES Localidades(id),
     FOREIGN KEY (club_id) REFERENCES Clubes(id)
@@ -61,16 +61,16 @@ CREATE TABLE Puestos (
     nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
--- Crear la tabla de Autoridades
+-- Crear la tabla de Autoridades con relación a Puestos
 CREATE TABLE Autoridades (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    foto VARCHAR(255), -- Ruta de la foto
     puesto_id INT NOT NULL,
     FOREIGN KEY (puesto_id) REFERENCES Puestos(id)
 );
 
+-- Crear la tabla de Encuentros
 CREATE TABLE IF NOT EXISTS Encuentros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     jornada INT NOT NULL,
@@ -124,35 +124,21 @@ INSERT INTO Puestos (nombre) VALUES
 ('Vocal Titular'), 
 ('Revisor de Cuenta');
 
+INSERT INTO Autoridades (nombre, apellido, puesto_id) VALUES 
+('Ana', 'Gómez', (SELECT id FROM Puestos WHERE nombre = 'Presidenta')),
+('Carlos', 'Martínez', (SELECT id FROM Puestos WHERE nombre = 'Tesorero')),
+('Laura', 'Pérez', (SELECT id FROM Puestos WHERE nombre = 'Secretaria')),
+('Jorge', 'López', (SELECT id FROM Puestos WHERE nombre = 'Vocal Titular')),
+('María', 'Rodríguez', (SELECT id FROM Puestos WHERE nombre = 'Revisor de Cuenta'));
+
 -- Insertar datos en la tabla Clubes
--- Clubes femeninos
 INSERT INTO Clubes (nombre, genero_id, localidad_id, grupo) VALUES
 ('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 'B'),
 ('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 'B'),
 ('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'B'),
 ('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 'B'),
 ('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande'), 'B'),
-('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'), 'B'),
-('Polideportivo Ampliación Matienzo', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'B'),
-('Club Villa Azalain', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'B');
-
--- Clubes masculinos
-INSERT INTO Clubes (nombre, genero_id, localidad_id, grupo) VALUES
-('Polideportivo Ampliación Matienzo', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'A'),
-('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 'A'),
-('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande'), 'A'),
-('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 'A'),
-('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 'A'),
-('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'A'),
-('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'), 'A'),
-('Club Villa Azalain', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'A');
-
--- Insertar algunos jugadores de ejemplo
-INSERT INTO Jugadores (nombre, apellido, dni, correo_electronico, fecha_nacimiento, genero_id, localidad_id, club_id) VALUES
-('Juan', 'Pérez', '12345678', 'juan.perez@example.com', '1995-05-15', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Bialet Massé'), 1),
-('Maria', 'González', '87654321', 'maria.gonzalez@example.com', '1998-08-22', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 2),
-('Luis', 'Martínez', '11223344', 'luis.martinez@example.com', '2002-03-30', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 3),
-('Ana', 'Lopez', '44332211', 'ana.lopez@example.com', '1999-11-11', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 4);
+('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'), 'B');
 
 -- Insertar el usuario "Karina" con la contraseña "Punilla2018"
 INSERT INTO Usuarios (username, password) VALUES ('Karina', 'Punilla2018');
