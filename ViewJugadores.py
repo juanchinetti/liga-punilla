@@ -1,7 +1,9 @@
+
 from tkinter import *
 from tkinter import ttk
 import mysql.connector
 from ConexionBD import *
+from tkinter import messagebox, simpledialog
 
 class LISTADO(Frame):
     def __init__(self, master=None, menu=None):
