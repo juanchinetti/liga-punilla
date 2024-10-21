@@ -15,6 +15,37 @@ def cargar_imagen(label):
         label.config(image=img)
         label.image = img
 
+def verificar_correo(correo):
+    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(patron, correo):
+        messagebox.showerror("Error", f"{correo} : no es una dirección de correo válida.")
+        return False
+    return True
+
+def validar_dni(dni):
+    if not dni.isdigit():
+        messagebox.showerror("Error", "Solamente se aceptan dígitos")
+        return False
+    elif len(dni) < 7 or len(dni) > 8:
+        messagebox.showerror("Error", "El número debe tener 7 u 8 dígitos")
+        return False   
+    return True
+
+def validar_telefono(telefono):
+    if not telefono.isdigit():  
+        messagebox.showerror("Error", "Solamente se aceptan dígitos")
+        return False
+    elif len(telefono) < 6 or len(telefono) > 10:
+        messagebox.showerror("Error", "El número de teléfono debe tener entre 6 y 10 dígitos")
+        return False
+    return True
+
+def validar_campos_obligatorios(entries):
+    if all(entry.get().strip() == "" for entry in entries):
+        messagebox.showerror("Error", "Todos los campos del formulario son obligatorios.")
+        return False
+    return True
+
 def validar_campos():
     nombre = entry_nombre.get()
     apellido = entry_apellido.get()
@@ -24,23 +55,22 @@ def validar_campos():
     fecha_nacimiento = entry_fecha_nacimiento.get_date()  
     correo = entry_correo.get()
 
+    if not validar_campos_obligatorios([entry_nombre, entry_apellido, entry_dni]):
+        return False
     if not re.match("^[A-Za-z]+$", nombre):
         messagebox.showerror("Error", "Por favor, escriba su nombre como está en el DNI")
         return False
     if not re.match("^[A-Za-z]+$", apellido):
         messagebox.showerror("Error", "Por favor, escriba su apellido como está en el DNI")
         return False
-    if not re.match("^[0-9]+$", dni):
-        messagebox.showerror("Error", "Por favor, solo números en el DNI")
+    if not validar_dni(dni):
         return False
     if not re.match("^[A-Za-z0-9 ]+$", domicilio):
         messagebox.showerror("Error", "Por favor, escriba su domicilio como está en el DNI")
         return False
-    if not re.match("^[0-9]+$", telefono):
-        messagebox.showerror("Error", "Por favor, escriba su teléfono como está en el DNI")
+    if not validar_telefono(telefono):
         return False
-    if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", correo):
-        messagebox.showerror("Error", "Por favor, ingrese un correo electrónico válido")
+    if not verificar_correo(correo):
         return False
 
     if messagebox.askyesno("Confirmación", "¿Está seguro que desea guardar?"):
@@ -64,7 +94,7 @@ def borrar_datos():
     carnet_img_label.config(image='', text="Sin Imagen") 
     ficha_medica_img_label.image = None  
     carnet_img_label.image = None  
-        
+
 def volver_menu():
     root.destroy()  
 
@@ -112,7 +142,8 @@ entry_telefono.grid(row=5, column=1, pady=5)
 entry_telefono.bind("<KeyPress>", solo_numeros)
 
 tk.Label(frame, text="Fecha de Nacimiento", bg="#ff7f00", fg="white").grid(row=6, column=0, sticky="e", padx=10, pady=5)
-entry_fecha_nacimiento = DateEntry(frame, width=27, background="orange", foreground="black", date_pattern="yyyy-mm-dd", state="readonly")
+fecha_nacimiento_var = tk.StringVar()  
+entry_fecha_nacimiento = DateEntry(frame, width=27, background="orange", foreground="black", textvariable=fecha_nacimiento_var, date_pattern="yyyy-mm-dd", state="readonly")  
 entry_fecha_nacimiento.grid(row=6, column=1, pady=5)
 
 tk.Label(frame, text="Correo Electrónico", bg="#ff7f00", fg="white").grid(row=7, column=0, sticky="e", padx=10, pady=5)
