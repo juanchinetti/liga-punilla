@@ -153,7 +153,7 @@ cancelar_btn.grid(row=11, column=0, pady=20)
 guardar_btn = tk.Button(frame, text="Guardar", bg="green", fg="white", width=10, command=validar_campos)
 guardar_btn.grid(row=11, column=1, pady=20)
 
-volver_menu_btn = tk.Button(frame, text="Volver", bg="lightblue", fg="black", width=10)
+volver_menu_btn = tk.Button(frame, text="Volver", bg="lightblue", fg="black", width=10, command=volver_menu)
 volver_menu_btn.grid(row=11, column=2, pady=20)
 
 root.mainloop()
