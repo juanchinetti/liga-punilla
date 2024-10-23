@@ -181,7 +181,7 @@ club_combo.set("Cualquiera")
 club_combo.grid(row=9, column=1, pady=5)
 
 tk.Label(frame_datos, text="Categoría", bg="#ff7f00", fg="black").grid(row=10, column=0, sticky="e", padx=10, pady=5)
-tipo_combo = ttk.Combobox(frame_datos, values=["Categoría", "Infantil", "Juvenil", "Adultos"], state="readonly")
+tipo_combo = ttk.Combobox(frame_datos, values=["Categoría", "Femenino", "Masculino"], state="readonly")
 tipo_combo.set("Categoría")
 tipo_combo.grid(row=10, column=1, pady=5)
 
