@@ -6,6 +6,8 @@ import re
 
 directorio_imagenes = r"C:\Users\Usuario\Downloads\visual code\matematica\Liga de Handball Punilla"
 
+jugadores = []
+
 def cargar_imagen(label):
     archivo = filedialog.askopenfilename(initialdir=directorio_imagenes, filetypes=[("Imágenes", ".png;.jpg;*.jpeg")])
     if archivo:
@@ -14,7 +16,6 @@ def cargar_imagen(label):
         img = ImageTk.PhotoImage(img)
         label.config(image=img)
         label.image = img
-
 
 def verificar_correo(correo):
     patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -89,9 +90,6 @@ def validar_campos():
         messagebox.showerror("Error", "Es obligatorio cargar el Carnet y la Ficha Médica.")
         return False
 
-    if messagebox.askyesno("Confirmación", "¿Está seguro que desea guardar?"):
-        messagebox.showinfo("Éxito", "Datos guardados exitosamente ⚽")
-        borrar_datos()
     return True
 
 def borrar_datos():
@@ -100,7 +98,7 @@ def borrar_datos():
     entry_dni.delete(0, tk.END)
     entry_domicilio.delete(0, tk.END)
     entry_telefono.delete(0, tk.END)
-    entry_fecha_nacimiento.set_date('2024-10-23')  
+    entry_fecha_nacimiento.set_date('')  
     entry_correo.delete(0, tk.END)
     tipo_combo.set('Categoría')
     localidad_combo.set('Ninguna')
@@ -122,6 +120,58 @@ def solo_letras(char):
 
 def solo_numeros(char):
     return char.isdigit()
+
+def alta_jugador():
+    jugador = {
+        "nombre": entry_nombre.get(),
+        "apellido": entry_apellido.get(),
+        "dni": entry_dni.get(),
+        "domicilio": entry_domicilio.get(),
+        "telefono": entry_telefono.get(),
+        "correo": entry_correo.get(),
+        "fecha_nacimiento": entry_fecha_nacimiento.get_date(),
+        "localidad": localidad_combo.get(),
+        "club": club_combo.get(),
+        "categoria": tipo_combo.get(),
+        "ficha_medica": ficha_medica_img_label.image,
+        "carnet": carnet_img_label.image,
+    }
+    if validar_campos():
+        jugadores.append(jugador)  
+        messagebox.showinfo("Éxito", "Jugador agregado exitosamente ⚽")
+        borrar_datos()  
+
+def baja_jugador():
+    dni = entry_dni.get()
+    for jugador in jugadores:
+        if jugador["dni"] == dni:
+            jugadores.remove(jugador)
+            messagebox.showinfo("Éxito", "Jugador eliminado exitosamente ⚽")
+            borrar_datos()  
+            return
+    messagebox.showerror("Error", "No se encontró un jugador con ese DNI.")
+
+def modificar_jugador():
+    dni = entry_dni.get()
+    for jugador in jugadores:
+        if jugador["dni"] == dni:
+            # Cargamos los datos en los campos
+            entry_nombre.delete(0, tk.END)
+            entry_nombre.insert(0, jugador["nombre"])
+            entry_apellido.delete(0, tk.END)
+            entry_apellido.insert(0, jugador["apellido"])
+            entry_domicilio.delete(0, tk.END)
+            entry_domicilio.insert(0, jugador["domicilio"])
+            entry_telefono.delete(0, tk.END)
+            entry_telefono.insert(0, jugador["telefono"])
+            entry_correo.delete(0, tk.END)
+            entry_correo.insert(0, jugador["correo"])
+            entry_fecha_nacimiento.set_date(jugador["fecha_nacimiento"])
+            localidad_combo.set(jugador["localidad"])
+            club_combo.set(jugador["club"])
+            tipo_combo.set(jugador["categoria"])
+            return
+    messagebox.showerror("Error", "No se encontró un jugador con ese DNI.")
 
 root = tk.Tk()
 root.title("Alta/Modificación de Jugadores")
@@ -153,57 +203,54 @@ entry_dni = tk.Entry(frame_datos, width=30, validate="key")
 entry_dni['validatecommand'] = (root.register(solo_numeros), '%S')
 entry_dni.grid(row=3, column=1, pady=5)
 
-tk.Label(frame_datos, text="Domicilio", bg="#ff7f00", fg="white").grid(row=4, column=0, sticky="e", padx=10, pady=5)
+tk.Label(frame_datos, text="Domicilio", bg="#ff7f00", fg="black").grid(row=4, column=0, sticky="e", padx=10, pady=5)
 entry_domicilio = tk.Entry(frame_datos, width=30)
 entry_domicilio.grid(row=4, column=1, pady=5)
 
-tk.Label(frame_datos, text="Teléfono", bg="#ff7f00", fg="white").grid(row=5, column=0, sticky="e", padx=10, pady=5)
+tk.Label(frame_datos, text="Teléfono", bg="#ff7f00", fg="black").grid(row=5, column=0, sticky="e", padx=10, pady=5)
 entry_telefono = tk.Entry(frame_datos, width=30, validate="key")
 entry_telefono['validatecommand'] = (root.register(solo_numeros), '%S')
 entry_telefono.grid(row=5, column=1, pady=5)
 
-tk.Label(frame_datos, text="Correo Electrónico (Obligatorio)", bg="#ff7f00", fg="white").grid(row=6, column=0, sticky="e", padx=10, pady=5)
+tk.Label(frame_datos, text="Correo (Obligatorio)", bg="#ff7f00", fg="black").grid(row=6, column=0, sticky="e", padx=10, pady=5)
 entry_correo = tk.Entry(frame_datos, width=30)
 entry_correo.grid(row=6, column=1, pady=5)
 
 tk.Label(frame_datos, text="Fecha de Nacimiento", bg="#ff7f00", fg="white").grid(row=7, column=0, sticky="e", padx=10, pady=5)
-entry_fecha_nacimiento = DateEntry(frame_datos, width=27, background="orange", foreground="black", date_pattern="yyyy-mm-dd", state="readonly")  
+entry_fecha_nacimiento = DateEntry(frame_datos, width=27, background="orange", foreground="black", date_pattern="dd-mm-yyyy", state="readonly")  
+entry_fecha_nacimiento.set_date('23-10-2024')
 entry_fecha_nacimiento.grid(row=7, column=1, pady=5)
 
+
 tk.Label(frame_datos, text="Localidad", bg="#ff7f00", fg="black").grid(row=8, column=0, sticky="e", padx=10, pady=5)
-localidad_combo = ttk.Combobox(frame_datos, values=["Ninguna", "Cosquín", "La Falda", "Mina Clavero"], state="readonly")
+localidad_combo = ttk.Combobox(frame_datos, values=["Ninguna", "Villa Carlos Paz", "Cosquín", "La Falda", "Huerta Grande"], state='readonly')
 localidad_combo.set("Ninguna")
 localidad_combo.grid(row=8, column=1, pady=5)
 
 tk.Label(frame_datos, text="Club", bg="#ff7f00", fg="black").grid(row=9, column=0, sticky="e", padx=10, pady=5)
-club_combo = ttk.Combobox(frame_datos, values=["Cualquiera", "Club 1", "Club 2", "Club 3"], state="readonly")
+club_combo = ttk.Combobox(frame_datos, values=["Cualquiera", "Club 1", "Club 2", "Club 3"], state='readonly')
 club_combo.set("Cualquiera")
 club_combo.grid(row=9, column=1, pady=5)
 
 tk.Label(frame_datos, text="Categoría", bg="#ff7f00", fg="black").grid(row=10, column=0, sticky="e", padx=10, pady=5)
-tipo_combo = ttk.Combobox(frame_datos, values=["Categoría", "Femenino", "Masculino"], state="readonly")
+tipo_combo = ttk.Combobox(frame_datos, values=["Categoría", "Femenino", "Masculino"], state='readonly')
 tipo_combo.set("Categoría")
 tipo_combo.grid(row=10, column=1, pady=5)
 
-ficha_medica_img_label = tk.Label(frame_imagenes, text="Sin Imagen", bg="#ff7f00", width=20, height=6)
+ficha_medica_img_label = tk.Label(frame_imagenes, text="Sin Imagen", width=30, height=10, bg="lightgrey")
 ficha_medica_img_label.grid(row=0, column=0, padx=10, pady=10)
+btn_cargar_ficha = tk.Button(frame_imagenes, text="Cargar Ficha Médica", command=lambda: cargar_imagen(ficha_medica_img_label), bg="lightgrey")
+btn_cargar_ficha.grid(row=1, column=0)
 
-carnet_img_label = tk.Label(frame_imagenes, text="Sin Imagen", bg="#ff7f00", width=20, height=6)
+carnet_img_label = tk.Label(frame_imagenes, text="Sin Imagen", width=30, height=10, bg="lightgrey")
 carnet_img_label.grid(row=0, column=1, padx=10, pady=10)
+btn_cargar_carnet = tk.Button(frame_imagenes, text="Cargar Carnet", command=lambda: cargar_imagen(carnet_img_label), bg="lightgrey")
+btn_cargar_carnet.grid(row=1, column=1)
 
-btn_cargar_ficha_medica = tk.Button(frame_imagenes, text="Cargar Ficha Médica", command=lambda: cargar_imagen(ficha_medica_img_label), bg="gray", fg="black")
-btn_cargar_ficha_medica.grid(row=1, column=0, padx=10, pady=10)
-
-btn_cargar_carnet = tk.Button(frame_imagenes, text="Cargar Carnet", command=lambda: cargar_imagen(carnet_img_label), bg="gray", fg="black")
-btn_cargar_carnet.grid(row=1, column=1, padx=10, pady=10)
-
-btn_guardar = tk.Button(frame_botones, text="Guardar", command=validar_campos, bg="#4caf50", fg="white")
-btn_guardar.grid(row=0, column=0, padx=20, pady=10)
-
-btn_borrar = tk.Button(frame_botones, text="Borrar", command=confirmar_borrado, bg="#f44336", fg="white")
-btn_borrar.grid(row=0, column=1, padx=20, pady=10)
-
-btn_volver = tk.Button(frame_botones, text="Volver", command=volver_menu, bg="#2196f3", fg="white")
-btn_volver.grid(row=0, column=2, padx=20, pady=10)
+tk.Button(frame_botones, text="Agregar Jugador", command=validar_campos, bg="green").grid(row=0, column=0, padx=5, pady=5)
+tk.Button(frame_botones, text="Eliminar Jugador", command=confirmar_borrado, bg="red").grid(row=0, column=1, padx=5, pady=5)
+tk.Button(frame_botones, text="Modificar Jugador", command=validar_campos, bg="deepsky blue").grid(row=0, column=2, padx=5, pady=5)
+tk.Button(frame_botones, text="Borrar Datos", command=confirmar_borrado, bg="red").grid(row=1, column=0, padx=5, pady=5)
+tk.Button(frame_botones, text="Volver al Menú", command=volver_menu, bg="gray").grid(row=1, column=1, padx=5, pady=5)
 
 root.mainloop()
