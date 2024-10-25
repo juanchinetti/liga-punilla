@@ -5,7 +5,6 @@ from PIL import Image, ImageTk
 import re
 
 directorio_imagenes = r"C:\Users\Usuario\Downloads\visual code\matematica\Liga de Handball Punilla"
-
 jugadores = []
 
 def cargar_imagen(label):
@@ -15,7 +14,7 @@ def cargar_imagen(label):
         img = img.resize((300, 300))  
         img = ImageTk.PhotoImage(img)
         label.config(image=img)
-        label.image = img
+        label.image = img  # Guardar referencia para evitar recolección de basura
 
 def verificar_correo(correo):
     patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -60,22 +59,27 @@ def validar_campos():
     club = club_combo.get()
     tipo = tipo_combo.get()
 
+    # Validación de campos obligatorios
     if not validar_campos_obligatorios([entry_nombre, entry_apellido, entry_dni, entry_correo]):
         return False
 
+    # Validación de nombre y apellido
     if not re.match("^[A-Za-z ]+$", nombre):
         messagebox.showerror("Error", "El nombre solo debe contener letras y espacios.")
         return False
     if not re.match("^[A-Za-z ]+$", apellido):
         messagebox.showerror("Error", "El apellido solo debe contener letras y espacios.")
         return False
-    if not validar_dni(dni):
+
+    # Validación de DNI y teléfono
+    if not validar_dni(dni) or not validar_telefono(telefono):
         return False
-    if not validar_telefono(telefono):
-        return False
+
+    # Validación de correo electrónico
     if not verificar_correo(correo):
         return False
 
+    # Validación de selección de categoría, localidad y club
     if tipo == 'Categoría':
         messagebox.showerror("Error", "Debe seleccionar una categoría válida.")
         return False
@@ -86,11 +90,17 @@ def validar_campos():
         messagebox.showerror("Error", "Debe seleccionar un club.")
         return False
 
-    if ficha_medica_img_label.image is None or carnet_img_label.image is None:
+    # Validación de carga de imágenes
+    if not hasattr(ficha_medica_img_label, 'image') or not hasattr(carnet_img_label, 'image'):
         messagebox.showerror("Error", "Es obligatorio cargar el Carnet y la Ficha Médica.")
         return False
 
-    return True
+    # Confirmación de guardado
+    if messagebox.askyesno("Confirmación", "¿Está seguro que desea guardar los datos?"):
+        messagebox.showinfo("Guardado exitoso", "Jugador agregado exitosamente ⚽")
+        return True  # Devuelve True si todo es válido y el usuario confirma guardar
+    return False  # Devuelve False si no se confirma guardar
+
 
 def borrar_datos():
     entry_nombre.delete(0, tk.END)
@@ -98,7 +108,7 @@ def borrar_datos():
     entry_dni.delete(0, tk.END)
     entry_domicilio.delete(0, tk.END)
     entry_telefono.delete(0, tk.END)
-    entry_fecha_nacimiento.set_date('')  
+    entry_fecha_nacimiento.set_date('23-10-2024')  
     entry_correo.delete(0, tk.END)
     tipo_combo.set('Categoría')
     localidad_combo.set('Ninguna')
@@ -136,11 +146,9 @@ def alta_jugador():
         "ficha_medica": ficha_medica_img_label.image,
         "carnet": carnet_img_label.image,
     }
-    if validar_campos():
-        jugadores.append(jugador)  
-        messagebox.showinfo("Éxito", "Jugador agregado exitosamente ⚽")
-        borrar_datos()  
-
+    jugadores.append(jugador)  
+    borrar_datos()  
+    
 def baja_jugador():
     dni = entry_dni.get()
     for jugador in jugadores:
@@ -216,7 +224,7 @@ tk.Label(frame_datos, text="Correo (Obligatorio)", bg="#ff7f00", fg="black").gri
 entry_correo = tk.Entry(frame_datos, width=30)
 entry_correo.grid(row=6, column=1, pady=5)
 
-tk.Label(frame_datos, text="Fecha de Nacimiento", bg="#ff7f00", fg="white").grid(row=7, column=0, sticky="e", padx=10, pady=5)
+tk.Label(frame_datos, text="Fecha de Nacimiento", bg="#ff7f00", fg="black").grid(row=7, column=0, sticky="e", padx=10, pady=5)
 entry_fecha_nacimiento = DateEntry(frame_datos, width=27, background="orange", foreground="black", date_pattern="dd-mm-yyyy", state="readonly")  
 entry_fecha_nacimiento.set_date('23-10-2024')
 entry_fecha_nacimiento.grid(row=7, column=1, pady=5)
