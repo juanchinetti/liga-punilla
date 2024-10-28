@@ -1,4 +1,5 @@
-import tkinter as tk
+
+ import tkinter as tk
 from tkinter import messagebox, ttk
 import mysql.connector
 from RegistrarClubes import ClubesABM as RegistroClubes
@@ -11,18 +12,20 @@ def obtener_clubes(filtro_genero=None, filtro_nombre=None):
             user="root",
             password="",
             port="3306",
-            database="LigaHandball"
+            database="ligaHandball"
         )
         cursor = conn.cursor()
 
+        # Cambiamos el query a SELECT para obtener los datos de los clubes
         query = """
-            SELECT c.nombre, l.nombre AS localidad, g.descripcion AS genero
-            FROM Clubes c
-            JOIN Localidades l ON c.localidad_id = l.id
-            JOIN Generos g ON c.genero_id = g.id
+        SELECT c.id, c.nombre, l.nombre AS localidad, g.descripcion AS genero
+        FROM Clubes c
+        JOIN Localidades l ON c.localidad_id = l.id
+        JOIN Generos g ON c.genero_id = g.id
         """
         params = []
 
+        # Agregamos filtros dinámicamente según los valores de `filtro_genero` y `filtro_nombre`
         if filtro_genero and filtro_genero != "Todos":
             query += " WHERE g.descripcion = %s"
             params.append(filtro_genero)
@@ -44,17 +47,35 @@ def obtener_clubes(filtro_genero=None, filtro_nombre=None):
 def modificar_club():
     selected_club_index = arbol.selection()
     if selected_club_index:
+        # Obtener los valores del club seleccionado
         club_actual = arbol.item(selected_club_index[0])['values']
-        # Crear una nueva instancia de ClubesABM para modificar el club seleccionado
-        app = ModificarClubes(menu_root=root, club_actual=club_actual)
+        
+        # Asegúrate de que el ID del club está en la primera posición
+        id_club = club_actual[0]  # El ID del club ahora es el primer elemento
+        
+        # Asegúrate de que id_club es un valor simple, no un objeto
+        if isinstance(id_club, (int, str)):
+            app = ModificarClubes(menu_root=None, club_actual=club_actual)
+            app.abrir()
+            
+            # Cuando el usuario confirme los cambios, llama a guardar_modificacion con el ID
+            app.guardar_modificacion(
+                id_club,
+                app.entry_nombre.get().strip(),
+                app.combo_localidad.get().strip(),
+                app.combo_genero.get().strip()
+            )
+        else:
+            messagebox.showerror("Error", "El ID del club no es válido.")
     else:
         messagebox.showwarning("Advertencia", "Seleccione un club para modificar.")
+
 
 def eliminar_club():
     selected_club_index = arbol.selection()
     if selected_club_index:
         club_actual = arbol.item(selected_club_index[0])['values']
-        nombre_club_actual = club_actual[0]
+        nombre_club_actual = club_actual[1]
 
         confirmacion = messagebox.askyesno("Confirmar Eliminación", f"¿Está seguro que desea eliminar el club '{nombre_club_actual}'?")
         if confirmacion:
@@ -80,7 +101,7 @@ def eliminar_club():
 
 def volver_menu():
     root.destroy()
-    import Menu  # Asegúrate de que este módulo esté en el mismo directorio
+    import Menu
     Menu.root = tk.Tk()
     Menu.root.mainloop()
 
@@ -94,8 +115,13 @@ def actualizar_treeview():
     filtro_genero = combobox_genero.get()
     filtro_nombre = entry_buscar.get()
     clubes_bd = obtener_clubes(filtro_genero, filtro_nombre)
+    print(clubes_bd) 
+
     for club in clubes_bd:
-        arbol.insert("", "end", values=(club[0], club[1], club[2]))
+        try:
+            arbol.insert("", "end", values=(club[0], club[1], club[2], club[3]))
+        except IndexError as e:
+            print(f"Error al insertar club: {club}. Detalles: {e}")
 
 root = tk.Tk()
 root.title("Lista de Clubes")
@@ -105,15 +131,31 @@ root.configure(bg="#ff7700")
 label = tk.Label(root, text="Clubes Registrados", font=("Calibri", 24), bg="#ff7700")
 label.pack(pady=(20, 10))
 
-arbol = ttk.Treeview(root, columns=("nombre", "localidad", "tipo"), show="headings")
+
+
+arbol = ttk.Treeview(
+    root, columns=("id", "nombre", "localidad", "tipo"), show="headings", style="Treeview"
+)
+
+# Define los encabezados
+arbol.heading("#2", text="Nombre", anchor="center")  # Encabezado para "nombre"
+arbol.heading("#3", text="Localidad", anchor="center")  # Encabezado para "localidad"
+arbol.heading("#4", text="Categoría", anchor="center")  # Encabezado para "categoría"
+
+# Configura las columnas
+arbol.column("#0", width=0, stretch=tk.NO)  # Columna virtual
+
+arbol.column("#2", width=230, anchor="center")  # nombre
+arbol.column("#3", width=230, anchor="center")  # localidad
+arbol.column("#4", width=230, anchor="center")  # tipo
+arbol.column("#1", width=0, stretch=tk.NO)  # Ocultar columna "id" (ancho 0)
+
+# Empaqueta el Treeview
 arbol.pack(pady=(10, 20), expand=True, fill='both')
 
-arbol.heading("nombre", text="Nombre del Club")
-arbol.heading("localidad", text="Localidad")
-arbol.heading("tipo", text="Categoría")
-arbol.column("nombre", anchor='center', width=400)
-arbol.column("localidad", anchor='center', width=300)
-arbol.column("tipo", anchor='center', width=200)
+
+
+
 
 frame_filtro = tk.Frame(root, bg="#ff7700")
 frame_filtro.pack(pady=(10, 0))
