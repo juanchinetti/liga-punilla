@@ -1,49 +1,158 @@
+DROP DATABASE IF EXISTS LigaHandball;
+
+-- Crear la base de datos
 CREATE DATABASE LigaHandball;
 USE LigaHandball;
 
-
+-- Crear la tabla de Localidades
 CREATE TABLE Localidades (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL UNIQUE
 );
 
+-- Crear la tabla de Géneros
+CREATE TABLE Generos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    descripcion VARCHAR(50) NOT NULL UNIQUE
+);
 
+-- Crear la tabla de Clubes con el atributo 'grupo'
 CREATE TABLE Clubes (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
-    logo BLOB,  -- Se utiliza BLOB para almacenar imágenes del logo
-    localidad_id INT,
-    tipo ENUM('Masculino', 'Femenino', 'Mixto') NOT NULL,
-    FOREIGN KEY (localidad_id) REFERENCES Localidades(id)
+    genero_id INT NOT NULL,
+    localidad_id INT NOT NULL,
+    logo LONGBLOB,
+    FOREIGN KEY (genero_id) REFERENCES Generos(id),
+    FOREIGN KEY (localidad_id) REFERENCES Localidades(id),
+    UNIQUE (nombre, genero_id, localidad_id)
 );
 
-
+-- Crear la tabla de Jugadores
 CREATE TABLE Jugadores (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    dni VARCHAR(20) NOT NULL UNIQUE,
-    correo_electronico VARCHAR(100),
-    fecha_nacimiento DATE,
-    sexo ENUM('Masculino', 'Femenino') NOT NULL,
+    dni VARCHAR(10) NOT NULL UNIQUE,
+    correo_electronico VARCHAR(100) UNIQUE,
+    fecha_nacimiento DATE NOT NULL,
+    genero_id INT NOT NULL,
     localidad_id INT NOT NULL,
     club_id INT,
-    ficha_medica BLOB,  -- Se utiliza BLOB para almacenar la ficha médica
-    carnet VARCHAR(100),  -- Almacena el número del carnet
+    ficha_medica_activa BOOLEAN NOT NULL DEFAULT 0,
+    carnet VARCHAR(255),
+    FOREIGN KEY (genero_id) REFERENCES Generos(id),
     FOREIGN KEY (localidad_id) REFERENCES Localidades(id),
     FOREIGN KEY (club_id) REFERENCES Clubes(id)
 );
 
--- Insertar Localidades (Ejemplo para la región de Punilla, Córdoba)
+-- Crear la tabla de Usuarios
+CREATE TABLE Usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+-- Crear la tabla de Puestos para autoridades
+CREATE TABLE Puestos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Crear la tabla de Autoridades con relación a Puestos
+CREATE TABLE Autoridades (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    puesto_id INT NOT NULL,
+    FOREIGN KEY (puesto_id) REFERENCES Puestos(id)
+);
+
+-- Crear la tabla de Encuentros
+CREATE TABLE IF NOT EXISTS Encuentros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    jornada INT NOT NULL,
+    grupo CHAR(1) NOT NULL,
+    club1 VARCHAR(100) NOT NULL,
+    club2 VARCHAR(100) NOT NULL,
+    resultado VARCHAR(10) NOT NULL  -- Almacena el resultado del encuentro
+);
+
+-- Insertar datos en la tabla Localidades
 INSERT INTO Localidades (nombre) VALUES 
-('Carlos Paz'), 
-('Mina Clavero'), 
+('Bialet Massé'), 
+('Capilla del Monte'), 
+('Cosquín (cabecera)'), 
+('Huerta Grande'), 
+('La Cumbre'), 
 ('La Falda'), 
-('Villa Giardino'), 
-('Tanti'), 
-('Cosquín'),
-('Embalse'), 
 ('Los Cocos'), 
-('Villa del Dique'),
-('San Antonio de Arredondo'),
-('Villa Carlos Paz');
+('San Antonio de Arredondo'), 
+('San Esteban'), 
+('Santa María'), 
+('Tanti'), 
+('Valle Hermoso'), 
+('Villa Carlos Paz'), 
+('Villa Giardino'), 
+('Villa Icho Cruz'), 
+('Villa Santa Cruz del Lago'), 
+('Cabalango'), 
+('Casa Grande'), 
+('Charbonier'), 
+('Cuesta Blanca'), 
+('Estancia Vieja'), 
+('Mayu Sumaj'), 
+('San Roque'), 
+('Tala Huasi'), 
+('Villa Parque Siquiman'), 
+('Malagueño'), 
+('Córdoba Capital'),
+('Villa Saldán');
+
+-- Insertar datos en la tabla Generos
+INSERT INTO Generos (descripcion) VALUES 
+('Masculino'),
+('Femenino');
+
+-- Insertar datos en la tabla Puestos
+INSERT INTO Puestos (nombre) VALUES 
+('Presidenta'), 
+('Tesorero'), 
+('Secretaria'), 
+('Vocal Titular'), 
+('Revisor de Cuenta');
+
+-- Insertar autoridades
+INSERT INTO Autoridades (nombre, apellido, puesto_id) VALUES 
+('Ana', 'Gómez', (SELECT id FROM Puestos WHERE nombre = 'Presidenta')),
+('Carlos', 'Martínez', (SELECT id FROM Puestos WHERE nombre = 'Tesorero')),
+('Laura', 'Pérez', (SELECT id FROM Puestos WHERE nombre = 'Secretaria')),
+('Jorge', 'López', (SELECT id FROM Puestos WHERE nombre = 'Vocal Titular')),
+('María', 'Rodríguez', (SELECT id FROM Puestos WHERE nombre = 'Revisor de Cuenta'));
+
+-- Insertar datos en la tabla Clubes
+INSERT INTO Clubes (nombre, genero_id, localidad_id) VALUES
+('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño')),
+('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz')),
+('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital')),
+('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)')),
+('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande')),
+('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'));
+
+-- Clubes masculinos
+INSERT INTO Clubes (nombre, genero_id, localidad_id) VALUES
+('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño')),
+('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz')),
+('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital')),
+('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)')),
+('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande')),
+('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'));
+
+-- Insertar algunos jugadores de ejemplo
+INSERT INTO Jugadores (nombre, apellido, dni, correo_electronico, fecha_nacimiento, genero_id, localidad_id, club_id) VALUES
+('Juan', 'Pérez', '12345678', 'juan.perez@example.com', '1995-05-15', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Bialet Massé'), 1),
+('Maria', 'González', '87654321', 'maria.gonzalez@example.com', '1998-08-22', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 2),
+('Luis', 'Martínez', '11223344', 'luis.martinez@example.com', '2002-03-30', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 3),
+('Ana', 'Lopez', '44332211', 'ana.lopez@example.com', '1999-11-11', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 4);
+
+-- Insertar el usuario "Karina" con la contraseña "Punilla2018"
