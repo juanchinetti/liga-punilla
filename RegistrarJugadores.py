@@ -1,152 +1,129 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
-from PIL import Image, ImageTk
-import re
+from tkinter import messagebox
+from tkinter import ttk
+from tkcalendar import DateEntry
+import mysql.connector
 
-directorio_imagenes = r"C:\Users\Usuario\Downloads\visual code\matematica\Liga de Handball Punilla"
+# Conectar a la base de datos MySQL
+def conectar_db():
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",  # Cambia por tu usuario
+            password="",  # Cambia por tu contraseña
+            database="LigaHandball"
+        )
+        return conn
+    except mysql.connector.Error as err:
+        messagebox.showerror("Error", f"No se pudo conectar a la base de datos: {err}")
+        return None
 
-def cargar_imagen(label):
-    archivo = filedialog.askopenfilename(initialdir=directorio_imagenes, filetypes=[("Imágenes", "*.png;*.jpg;*.jpeg")])
-    if archivo:
-        img = Image.open(archivo)
-        img.thumbnail((120, 120), Image.LANCZOS)  
-        img = ImageTk.PhotoImage(img)
-        label.config(image=img)
-        label.image = img
+# Obtener datos de la tabla 'Clubes'
+def obtener_clubes():
+    conn = conectar_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nombre FROM Clubes")
+    clubes = cursor.fetchall()
+    conn.close()
+    return clubes
 
-def validar_campos():
+# Obtener datos de la tabla 'Localidades'
+def obtener_localidades():
+    conn = conectar_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nombre FROM Localidades")
+    localidades = cursor.fetchall()
+    conn.close()
+    return localidades
+
+# Obtener datos de la tabla 'Generos'
+def obtener_generos():
+    conn = conectar_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, descripcion FROM Generos")
+    generos = cursor.fetchall()
+    conn.close()
+    return generos
+
+# Función para insertar un nuevo jugador en la base de datos
+def guardar_jugador():
     nombre = entry_nombre.get()
     apellido = entry_apellido.get()
     dni = entry_dni.get()
+    correo = entry_email.get()
+    fecha_nacimiento = calendar_fecha_nacimiento.get()
+    genero_id = combo_genero.get()
+    localidad_id = combo_localidad.get()
+    club_id = combo_club.get()
     domicilio = entry_domicilio.get()
-    telefono = entry_telefono.get()
-    fecha_nacimiento = entry_fecha_nacimiento.get()
-    correo = entry_correo.get()
 
-    if not re.match("^[A-Za-z]+$", nombre):
-        messagebox.showerror("Error", "Por favor, escriba su nombre como está en el DNI")
-        return False
-    if not re.match("^[A-Za-z]+$", apellido):
-        messagebox.showerror("Error", "Por favor, escriba su apellido como está en el DNI")
-        return False
-    if not re.match("^[0-9]+$", dni):
-        messagebox.showerror("Error", "Por favor, solo números en el DNI")
-        return False
-    if not re.match("^[A-Za-z0-9 ]+$", domicilio):
-        messagebox.showerror("Error", "Por favor, escriba su domicilio como está en el DNI")
-        return False
-    if not re.match("^[0-9]+$", telefono):
-        messagebox.showerror("Error", "Por favor, escriba su teléfono como está en el DNI")
-        return False
-    if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", correo):
-        messagebox.showerror("Error", "Por favor, ingrese un correo electrónico válido")
-        return False
+    if not nombre or not apellido or not dni or not fecha_nacimiento or not genero_id or not localidad_id or not club_id:
+        messagebox.showwarning("Advertencia", "Por favor, rellena todos los campos obligatorios")
+        return
 
-    if messagebox.askyesno("Confirmación", "¿Está seguro que desea guardar?"):
-        messagebox.showinfo("Éxito", "Datos guardados exitosamente ⚽") 
+    conn = conectar_db()
+    if conn:
+        cursor = conn.cursor()
 
-    return True
+        # Insertar el nuevo jugador
+        try:
+            cursor.execute(
+                "INSERT INTO Jugadores (nombre, apellido, dni, correo_electronico, fecha_nacimiento, genero_id, localidad_id, club_id, domicilio, ficha_medica_activa) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (nombre, apellido, dni, correo, fecha_nacimiento, genero_id, localidad_id, club_id, domicilio, 0)
+            )
+            conn.commit()
+            messagebox.showinfo("Éxito", "Jugador guardado correctamente")
+        except mysql.connector.Error as err:
+            messagebox.showerror("Error", f"No se pudo guardar el jugador: {err}")
+        finally:
+            conn.close()
 
-def borrar_datos():
-    entry_nombre.delete(0, tk.END)
-    entry_apellido.delete(0, tk.END)
-    entry_dni.delete(0, tk.END)
-    entry_domicilio.delete(0, tk.END)
-    entry_telefono.delete(0, tk.END)
-    entry_fecha_nacimiento.delete(0, tk.END)
-    entry_correo.delete(0, tk.END)
-    sexo_combo.set('')
-    localidad_combo.set('')
-    club_combo.set('')
-    ficha_medica_img_label.config(image='')
-    carnet_img_label.config(image='')
-
+# Crear la interfaz
 root = tk.Tk()
-root.title("Alta/Modificación de Jugadores")
-root.geometry("1366x765")
-root.configure(bg="#ff7f00")
-root.resizable(False, False)
+root.title("Registro de Jugadores")
+root.geometry("400x500")
 
-frame = tk.Frame(root, bg="#ff7f00")
-frame.pack(padx=20, pady=10, fill=tk.BOTH, expand=True)
+# Campos para el formulario
+tk.Label(root, text="Nombre:").grid(row=0, column=0, padx=10, pady=10)
+entry_nombre = tk.Entry(root)
+entry_nombre.grid(row=0, column=1)
 
-tk.Label(frame, text="Nombre (Obligatorio)", bg="#ff7f00", fg="black").grid(row=1, column=0, sticky="e", padx=10, pady=5)
-entry_nombre = tk.Entry(frame, width=30)
-entry_nombre.grid(row=1, column=1, pady=5)
+tk.Label(root, text="Apellido:").grid(row=1, column=0, padx=10, pady=10)
+entry_apellido = tk.Entry(root)
+entry_apellido.grid(row=1, column=1)
 
-def solo_letras(event):
-    if not event.char.isalpha() and event.keysym != 'BackSpace':
-        return "break"
+tk.Label(root, text="DNI:").grid(row=2, column=0, padx=10, pady=10)
+entry_dni = tk.Entry(root)
+entry_dni.grid(row=2, column=1)
 
-entry_nombre.bind("<KeyPress>", solo_letras)
+tk.Label(root, text="Correo electrónico:").grid(row=3, column=0, padx=10, pady=10)
+entry_email = tk.Entry(root)
+entry_email.grid(row=3, column=1)
 
-tk.Label(frame, text="Apellido (Obligatorio)", bg="#ff7f00", fg="black").grid(row=2, column=0, sticky="e", padx=10, pady=5)
-entry_apellido = tk.Entry(frame, width=30)
-entry_apellido.grid(row=2, column=1, pady=5)
-entry_apellido.bind("<KeyPress>", solo_letras)
+tk.Label(root, text="Fecha de Nacimiento:").grid(row=4, column=0, padx=10, pady=10)
+calendar_fecha_nacimiento = DateEntry(root, date_pattern="yyyy-mm-dd", maxdate="today")
+calendar_fecha_nacimiento.grid(row=4, column=1)
 
-tk.Label(frame, text="D.N.I (Obligatorio)", bg="#ff7f00", fg="black").grid(row=3, column=0, sticky="e", padx=10, pady=5)
-entry_dni = tk.Entry(frame, width=30)
-entry_dni.grid(row=3, column=1, pady=5)
+tk.Label(root, text="Género:").grid(row=5, column=0, padx=10, pady=10)
+combo_genero = ttk.Combobox(root, values=[f"{g[0]} - {g[1]}" for g in obtener_generos()])
+combo_genero.grid(row=5, column=1)
 
-def solo_numeros(event):
-    if not event.char.isdigit() and event.keysym != 'BackSpace':
-        return "break"
+tk.Label(root, text="Localidad:").grid(row=6, column=0, padx=10, pady=10)
+combo_localidad = ttk.Combobox(root, values=[f"{l[0]} - {l[1]}" for l in obtener_localidades()])
+combo_localidad.grid(row=6, column=1)
 
-entry_dni.bind("<KeyPress>", solo_numeros)
+tk.Label(root, text="Club:").grid(row=7, column=0, padx=10, pady=10)
+combo_club = ttk.Combobox(root, values=[f"{c[0]} - {c[1]}" for c in obtener_clubes()])
+combo_club.grid(row=7, column=1)
 
-tk.Label(frame, text="Domicilio", bg="#ff7f00", fg="white").grid(row=4, column=0, sticky="e", padx=10, pady=5)
-entry_domicilio = tk.Entry(frame, width=30)
-entry_domicilio.grid(row=4, column=1, pady=5)
+tk.Label(root, text="Domicilio:").grid(row=8, column=0, padx=10, pady=10)
+entry_domicilio = tk.Entry(root)
+entry_domicilio.grid(row=8, column=1)
 
-tk.Label(frame, text="Teléfono", bg="#ff7f00", fg="white").grid(row=5, column=0, sticky="e", padx=10, pady=5)
-entry_telefono = tk.Entry(frame, width=30)
-entry_telefono.grid(row=5, column=1, pady=5)
-entry_telefono.bind("<KeyPress>", solo_numeros)
+# Botón para guardar
+boton_guardar = tk.Button(root, text="Guardar Jugador", command=guardar_jugador)
+boton_guardar.grid(row=9, column=0, columnspan=2, pady=20)
 
-tk.Label(frame, text="Fecha de Nacimiento", bg="#ff7f00", fg="white").grid(row=6, column=0, sticky="e", padx=10, pady=5)
-entry_fecha_nacimiento = tk.Entry(frame, width=30) 
-entry_fecha_nacimiento.grid(row=6, column=1, pady=5)
-
-tk.Label(frame, text="Correo Electrónico", bg="#ff7f00", fg="white").grid(row=7, column=0, sticky="e", padx=10, pady=5)
-entry_correo = tk.Entry(frame, width=30)  
-entry_correo.grid(row=7, column=1, pady=5)
-
-tk.Label(frame, text="Género", bg="#ff7f00", fg="white").grid(row=8, column=0, sticky="e", padx=10, pady=5)
-sexo_combo = ttk.Combobox(frame, values=["Masculino", "Femenino"], width=28, state='readonly')
-sexo_combo.grid(row=8, column=1, pady=5)
-
-tk.Label(frame, text="Localidad", bg="#ff7f00", fg="white").grid(row=9, column=0, sticky="e", padx=10, pady=5)
-localidad_combo = ttk.Combobox(frame, values=["Localidad 1", "Localidad 2", "Localidad 3"], width=28, state='readonly')
-localidad_combo.grid(row=9, column=1, pady=5)
-
-tk.Label(frame, text="Club", bg="#ff7f00", fg="white").grid(row=10, column=0, sticky="e", padx=10, pady=5)
-club_combo = ttk.Combobox(frame, values=["Club A", "Club B", "Club C"], width=28, state='readonly')
-club_combo.grid(row=10, column=1, pady=5)
-
-ficha_medica_label = tk.Label(frame, text="Ficha Médica", bg="#ff7f00", fg="white")
-ficha_medica_label.grid(row=1, column=3, padx=10, pady=5)
-
-ficha_medica_img_label = tk.Label(frame, bg="#ff7f00", text="Sin Imagen")
-ficha_medica_img_label.grid(row=2, column=3, padx=10, pady=5)
-
-tk.Button(frame, text="Subir", command=lambda: cargar_imagen(ficha_medica_img_label), bg="grey").grid(row=3, column=3, padx=10, pady=5)
-
-carnet_label = tk.Label(frame, text="Carnet", bg="#ff7f00", fg="white")
-carnet_label.grid(row=4, column=3, padx=10, pady=5)
-
-carnet_img_label = tk.Label(frame, bg="#ff7f00", text="Sin Imagen")
-carnet_img_label.grid(row=5, column=3, padx=10, pady=5)
-
-tk.Button(frame, text="Subir", command=lambda: cargar_imagen(carnet_img_label), bg="grey").grid(row=6, column=3, padx=10, pady=5)
-
-cancelar_btn = tk.Button(frame, text="Cancelar", bg="red", fg="white", width=10, command=borrar_datos)
-cancelar_btn.grid(row=11, column=0, pady=20)
-
-guardar_btn = tk.Button(frame, text="Guardar", bg="green", fg="white", width=10, command=validar_campos)
-guardar_btn.grid(row=11, column=1, pady=20)
-
-volver_menu_btn = tk.Button(frame, text="Volver", bg="lightblue", fg="black", width=10)
-volver_menu_btn.grid(row=11, column=2, pady=20)
-
+# Iniciar la interfaz
 root.mainloop()

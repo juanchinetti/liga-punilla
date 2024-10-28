@@ -87,6 +87,10 @@ def nueva_autoridad():
     root.destroy()
     import RegistrarAutoridad
 
+def registrar_autoridades():
+    root.destroy()
+    import RegistrarAutoridades  # Este es el nuevo botón que llevará a la interfaz RegistrarAutoridades
+
 def actualizar_treeview():
     for item in arbol.get_children():
         arbol.delete(item)
@@ -141,6 +145,10 @@ button_nuevo = tk.Button(button_frame, text="Agregar", font=("Calibri", 24), bg=
 button_nuevo.pack(side=tk.LEFT, padx=(0, 20))
 
 button_modificar = tk.Button(button_frame, text="Modificar", font=("Calibri", 24), bg="#d3d3d3", command=modificar_autoridad)
-button_modificar.pack(side=tk.LEFT)
+button_modificar.pack(side=tk.LEFT, padx=(0, 20))
+
+# Nuevo botón para ir a la interfaz RegistrarAutoridades
+button_registrar = tk.Button(button_frame, text="Registrar Autoridades", font=("Calibri", 24), bg="#d3d3d3", command=registrar_autoridades)
+button_registrar.pack(side=tk.LEFT)
 
 root.mainloop()
