@@ -1,50 +1,77 @@
 import tkinter as tk
-from PIL import Image, ImageTk
 from tkinter import messagebox
+from PIL import Image, ImageTk  # Necesario para cargar imágenes
 
+def abrir_view_clubes():
+    root.destroy()
+    import ViewClubes
 
+def abrir_view_jugadores():
+    root.destroy()
+    import ViewJugadores
+
+def abrir_fixture():
+    root.destroy()
+    import FIxture
+
+def abrir_historia():
+    root.destroy()
+    import HIstoria
+
+#def abrir_view_autoridades():
+    #root.destroy()
+    #import ViewAutoridades
+
+def abrir_reglamento():
+    root.destroy()
+    import Reglamentos
+
+def salir():
+    root.quit()
+
+# Crear la ventana principal
 root = tk.Tk()
 root.title("Menú Principal")
-root.geometry("1230x600")
+root.geometry(f"{root.winfo_screenwidth()-100}x{root.winfo_screenheight()-100}+50+50")  # Ventana maximizada pero no pantalla completa
+root.resizable(False, False)  # Evitar cambiar tamaño manualmente
 root.configure(bg="#ff7700")
-root.resizable(False, False)
 
-
+# Cargar la imagen
 try:
-    original_image = Image.open(r"C:\Users\Usuario\Downloads\visual code\matematica\Liga de Handball Punilla\liga-punilla.png")
-    resized_image = original_image.resize((250, 250))
-    logo_image = ImageTk.PhotoImage(resized_image)
+    imagen = Image.open("Logo_Handball.png")
+    imagen = imagen.resize((300, 300), Image.LANCZOS)  # Cambiado a Image.LANCZOS
+    imagen_tk = ImageTk.PhotoImage(imagen)
+    label_imagen = tk.Label(root, image=imagen_tk, bg="#ff7700")
+    label_imagen.pack(pady=(20, 10))
+except Exception as e:
+    messagebox.showerror("Error", f"No se pudo cargar la imagen: {e}")
 
-    
-    logo_label = tk.Label(root, image=logo_image, bg="#ff7700")
-    logo_label.grid(row=0, column=0, columnspan=2, pady=(20, 10))
+# Frame para los botones
+frame_botones = tk.Frame(root, bg="#ff7700")
+frame_botones.pack(pady=(10, 20))
 
-except FileNotFoundError:
-    messagebox.showerror("Error", "No se encontró el archivo de la imagen 'Liga-Punilla.png'.")
-    
-    logo_label = tk.Label(root, text="Logo no disponible", font=("Calibri", 24), bg="#ff7700", fg="white")
-    logo_label.grid(row=0, column=0, columnspan=2, pady=(20, 10))
+# Botones del menú
+button_ver_clubes = tk.Button(frame_botones, text="Ver Clubes", font=("Calibri", 18), bg="#d3d3d3", command=abrir_view_clubes, width=20)
+button_ver_clubes.grid(row=0, column=0, padx=20, pady=10)
 
+button_ver_jugadores = tk.Button(frame_botones, text="Ver Jugadores", font=("Calibri", 18), bg="#d3d3d3", command=abrir_view_jugadores, width=20)
+button_ver_jugadores.grid(row=0, column=1, padx=20, pady=10)
 
-button1 = tk.Button(root, text="Registrar Club", font=("Calibri", 24), bg="#d3d3d3", width=15, height=1)
-button2 = tk.Button(root, text="Ver Clubes", font=("Calibri", 24), bg="#d3d3d3", width=15, height=1)
-button3 = tk.Button(root, text="Registrar Jugador", font=("Calibri", 24), bg="#d3d3d3", width=15, height=1)
-button4 = tk.Button(root, text="Ver Jugadores", font=("Calibri", 24), bg="#d3d3d3", width=15, height=1)
-button5 = tk.Button(root, text="Salir", font=("Calibri", 24), bg="#d3d3d3", width=15, height=1, command=root.quit)
+button_fixture = tk.Button(frame_botones, text="Fixture", font=("Calibri", 18), bg="#d3d3d3", command=abrir_fixture, width=20)
+button_fixture.grid(row=1, column=0, padx=20, pady=10)
 
+button_historia = tk.Button(frame_botones, text="Historia", font=("Calibri", 18), bg="#d3d3d3", command=abrir_historia, width=20)
+button_historia.grid(row=1, column=1, padx=20, pady=10)
 
-button1.grid(row=1, column=0, padx=(0, 1), pady=(2, 2))  
-button2.grid(row=2, column=0, padx=(0, 1), pady=(2, 2))  
-button3.grid(row=1, column=1, padx=(1, 0), pady=(2, 2))  
-button4.grid(row=2, column=1, padx=(1, 0), pady=(2, 2)) 
-button5.grid(row=3, column=0, columnspan=2, pady=(10, 10))  
+#button_ver_autoridades = tk.Button(frame_botones, text="Ver Autoridades", font=("Calibri", 18), bg="#d3d3d3", command=abrir_view_autoridades, width=20)
+#button_ver_autoridades.grid(row=2, column=0, padx=20, pady=10)
 
+button_reglamento = tk.Button(frame_botones, text="Reglamento", font=("Calibri", 18), bg="#d3d3d3", command=abrir_reglamento, width=20)
+button_reglamento.grid(row=2, column=1, padx=20, pady=10)
 
-root.grid_rowconfigure(0, weight=1)
-root.grid_rowconfigure(1, weight=1)
-root.grid_rowconfigure(2, weight=1)
-root.grid_columnconfigure(0, weight=1)
-root.grid_columnconfigure(1, weight=1)
+# Botón de salir
+button_salir = tk.Button(frame_botones, text="Salir", font=("Calibri", 18), bg="#d3d3d3", command=salir, width=44)
+button_salir.grid(row=3, column=0, columnspan=2, pady=20)
 
-
+# Iniciar el bucle principal de la interfaz
 root.mainloop()
