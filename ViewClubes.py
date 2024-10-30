@@ -1,5 +1,5 @@
 
- import tkinter as tk
+import tkinter as tk
 from tkinter import messagebox, ttk
 import mysql.connector
 from RegistrarClubes import ClubesABM as RegistroClubes
