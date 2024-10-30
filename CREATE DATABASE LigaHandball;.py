@@ -1,3 +1,4 @@
+-- Borrar la base de datos actual si existe
 DROP DATABASE IF EXISTS LigaHandball;
 
 -- Crear la base de datos
@@ -16,13 +17,14 @@ CREATE TABLE Generos (
     descripcion VARCHAR(50) NOT NULL UNIQUE
 );
 
--- Crear la tabla de Clubes con el atributo 'grupo'
+-- Crear la tabla de Clubes con el atributo 'grupo' y 'logo' como LONGBLOB
 CREATE TABLE Clubes (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     genero_id INT NOT NULL,
     localidad_id INT NOT NULL,
-    logo LONGBLOB,
+    grupo CHAR(1) NOT NULL, -- Grupo A o B
+    logo LONGBLOB, -- Imagen del logo en formato binario
     FOREIGN KEY (genero_id) REFERENCES Generos(id),
     FOREIGN KEY (localidad_id) REFERENCES Localidades(id),
     UNIQUE (nombre, genero_id, localidad_id)
@@ -75,7 +77,7 @@ CREATE TABLE IF NOT EXISTS Encuentros (
     grupo CHAR(1) NOT NULL,
     club1 VARCHAR(100) NOT NULL,
     club2 VARCHAR(100) NOT NULL,
-    resultado VARCHAR(10) NOT NULL  -- Almacena el resultado del encuentro
+    resultado VARCHAR(10) NOT NULL -- Almacena el resultado del encuentro
 );
 
 -- Insertar datos en la tabla Localidades
@@ -131,22 +133,22 @@ INSERT INTO Autoridades (nombre, apellido, puesto_id) VALUES
 ('María', 'Rodríguez', (SELECT id FROM Puestos WHERE nombre = 'Revisor de Cuenta'));
 
 -- Insertar datos en la tabla Clubes
-INSERT INTO Clubes (nombre, genero_id, localidad_id) VALUES
-('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño')),
-('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz')),
-('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital')),
-('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)')),
-('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande')),
-('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'));
+INSERT INTO Clubes (nombre, genero_id, localidad_id, grupo) VALUES
+('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 'B'),
+('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 'B'),
+('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'B'),
+('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 'B'),
+('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande'), 'B'),
+('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'), 'B');
 
 -- Clubes masculinos
-INSERT INTO Clubes (nombre, genero_id, localidad_id) VALUES
-('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño')),
-('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz')),
-('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital')),
-('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)')),
-('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande')),
-('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'));
+INSERT INTO Clubes (nombre, genero_id, localidad_id, grupo) VALUES
+('Municipalidad Malagueño', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 'A'),
+('Club Sarmiento', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Villa Carlos Paz'), 'A'),
+('Zona Sur', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Córdoba Capital'), 'A'),
+('Universitario Cosquín', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Cosquín (cabecera)'), 'A'),
+('Club Huerta Grande', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Huerta Grande'), 'A'),
+('Club Capilla del Monte', (SELECT id FROM Generos WHERE descripcion = 'Masculino'), (SELECT id FROM Localidades WHERE nombre = 'Capilla del Monte'), 'A');
 
 -- Insertar algunos jugadores de ejemplo
 INSERT INTO Jugadores (nombre, apellido, dni, correo_electronico, fecha_nacimiento, genero_id, localidad_id, club_id) VALUES
@@ -156,3 +158,4 @@ INSERT INTO Jugadores (nombre, apellido, dni, correo_electronico, fecha_nacimien
 ('Ana', 'Lopez', '44332211', 'ana.lopez@example.com', '1999-11-11', (SELECT id FROM Generos WHERE descripcion = 'Femenino'), (SELECT id FROM Localidades WHERE nombre = 'Malagueño'), 4);
 
 -- Insertar el usuario "Karina" con la contraseña "Punilla2018"
+INSERT INTO Usuarios (username, password) VALUES ('Karina', 'Punilla2018');
