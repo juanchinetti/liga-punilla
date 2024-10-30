@@ -3,6 +3,63 @@ import tkinter as tk
 from tkcalendar import DateEntry  
 from PIL import Image, ImageTk
 import re
+import mysql.connector
+
+directorio_imagenes = r"C:\Users\Usuario\Downloads\visual code\matematica\Liga de Handball Punilla"
+jugadores = []
+
+# Conexión a la base de datos
+def conectar_db():
+    try:
+        return mysql.connector.connect(
+            host="localhost",  # Cambia esto si es necesario
+            user="tu_usuario",  # Cambia esto por tu usuario de MySQL
+            password="tu_contraseña",  # Cambia esto por tu contraseña de MySQL
+            database="tu_base_de_datos"  # Cambia esto por tu nombre de base de datos
+        )
+    except mysql.connector.Error as err:
+        messagebox.showerror("Error de conexión", f"No se pudo conectar a la base de datos: {err}")
+        return None
+
+# Función para agregar jugador a la base de datos
+def alta_jugador():
+    jugador = {
+        "nombre": entry_nombre.get(),
+        "apellido": entry_apellido.get(),
+        "dni": entry_dni.get(),
+        "domicilio": entry_domicilio.get(),
+        "telefono": entry_telefono.get(),
+        "correo": entry_correo.get(),
+        "fecha_nacimiento": entry_fecha_nacimiento.get_date(),
+        "localidad": localidad_combo.get(),
+        "club": club_combo.get(),
+        "categoria": tipo_combo.get(),
+        "ficha_medica": ficha_medica_img_label.image,
+        "carnet": carnet_img_label.image,
+    }
+    
+    if not validar_campos():  # Asegúrate de validar los campos antes de agregar
+        return
+
+    # Conectar a la base de datos y agregar jugador
+    db = conectar_db()
+    if db:
+        cursor = db.cursor()
+        sql = ("INSERT INTO jugadores (nombre, apellido, dni, domicilio, telefono, correo, fecha_nacimiento, localidad, club, categoria) "
+               "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+        values = (jugador["nombre"], jugador["apellido"], jugador["dni"], jugador["domicilio"],
+                  jugador["telefono"], jugador["correo"], jugador["fecha_nacimiento"],
+                  jugador["localidad"], jugador["club"], jugador["categoria"])
+        try:
+            cursor.execute(sql, values)
+            db.commit()
+            messagebox.showinfo("Guardado exitoso", "Jugador agregado exitosamente ⚽")
+            borrar_datos()
+        except mysql.connector.Error as err:
+            messagebox.showerror("Error", f"No se pudo guardar el jugador: {err}")
+        finally:
+            cursor.close()
+            db.close()
 
 directorio_imagenes = r"C:\Users\Usuario\Downloads\visual code\matematica\Liga de Handball Punilla"
 jugadores = []
@@ -13,21 +70,30 @@ def cargar_imagen(label):
         # Carga la imagen
         img = Image.open(archivo)
 
-        # Obtén el tamaño actual del label
-        label_width = label.winfo_width()
-        label_height = label.winfo_height()
+        # Obtén las dimensiones reales de la imagen
+        original_width, original_height = img.size
 
-        # Redimensiona la imagen manteniendo la relación de aspecto
-        img.thumbnail((label_width, label_height), Image.LANCZOS)
+        # Define un tamaño máximo para las imágenes
+        max_width = 300  # Puedes ajustar estos valores
+        max_height = 300
+
+        # Calcula el nuevo tamaño de la imagen manteniendo la relación de aspecto
+        scale = min(max_width / original_width, max_height / original_height)
+        new_width = int(original_width * scale)
+        new_height = int(original_height * scale)
+
+        # Redimensiona la imagen
+        img = img.resize((new_width, new_height), Image.LANCZOS)
         
-        # Calcula el nuevo tamaño de la imagen para el label
-        img = img.resize((label_width, label_height), Image.LANCZOS)
-
+        # Convierte la imagen redimensionada para Tkinter
         img = ImageTk.PhotoImage(img)
 
         # Actualiza la imagen del label
         label.config(image=img)
         label.image = img  # Guarda la referencia para evitar recolección de basura
+
+        # Ajusta el tamaño del Label si es necesario
+        label.config(width=new_width, height=new_height)
 
 def verificar_correo(correo):
     patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -200,6 +266,7 @@ root.title("Alta/Modificación de Jugadores")
 root.geometry("1366x765")
 root.configure(bg="#ff7f00")
 root.resizable(False, False)
+
 
 frame_datos = tk.Frame(root, bg="#ff7f00")
 frame_datos.grid(row=0, column=0, padx=50, pady=20, sticky="n")
