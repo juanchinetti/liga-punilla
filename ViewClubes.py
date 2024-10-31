@@ -160,7 +160,7 @@ arbol.pack(pady=(10, 20), expand=True, fill='both')
 frame_filtro = tk.Frame(root, bg="#ff7700")
 frame_filtro.pack(pady=(10, 0))
 
-tk.Label(frame_filtro, text="Filtrar por género:", font=("Calibri", 18), bg="#ff7700").pack(side=tk.LEFT, padx=10)
+tk.Label(frame_filtro, text="Filtrar por Categoria:", font=("Calibri", 18), bg="#ff7700").pack(side=tk.LEFT, padx=10)
 combobox_genero = ttk.Combobox(frame_filtro, values=["Todos", "Masculino", "Femenino"], state="readonly", font=("Calibri", 18))
 combobox_genero.current(0)
 combobox_genero.pack(side=tk.LEFT)
