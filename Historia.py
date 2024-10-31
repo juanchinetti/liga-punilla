@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-def main():
+def main(menu_principal=None):
     root = tk.Tk()
     root.title("Historia")
     root.configure(bg="#ff7700")
@@ -34,9 +34,10 @@ def main():
     text_widget.pack(padx=10, pady=10)
 
     def Volver_menu():
-        root.destroy()
-        import Menu
-    
+        root.destroy()  # Cierra la ventana actual de "Historia"
+        if menu_principal:
+            menu_principal.deiconify()  # Muestra la ventana del menú principal si está disponible
+
     # Mantener visible el botón Volver
     boton_volver = tk.Button(root, text="Volver", font=("Calibri", 24), bg="white", command=Volver_menu)
     boton_volver.pack(pady=(30, 20))
@@ -45,3 +46,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
