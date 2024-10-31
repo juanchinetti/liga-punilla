@@ -139,7 +139,6 @@ def editar_resultado(event):
 
 # Función para volver al menú
 def volver_menu():
-    root.destroy()
     import Menu
 
 # Crear la ventana principal
