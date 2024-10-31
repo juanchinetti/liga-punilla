@@ -139,9 +139,41 @@ class ClubesABM:
             conn.close()
 
     def obtener_localidades(self):
-        # Implementa esta función para obtener las localidades de la base de datos
-        return ["Localidad 1", "Localidad 2", "Localidad 3"]
+        # Función para obtener las localidades de la base de datos
+        try:
+            conn = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="",
+                port="3306",
+                database="LigaHandball"
+            )
+            cursor = conn.cursor()
+            cursor.execute("SELECT nombre FROM Localidades")
+            localidades = [row[0] for row in cursor.fetchall()]
+            return localidades
+        except mysql.connector.Error as e:
+            messagebox.showerror("Error", f"No se pudo obtener las localidades: {e}")
+            return []
+        finally:
+            conn.close()
 
     def obtener_generos(self):
-        # Implementa esta función para obtener los géneros de la base de datos
-        return ["Masculino", "Femenino"]
+        # Función para obtener los géneros de la base de datos
+        try:
+            conn = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="",
+                port="3306",
+                database="LigaHandball"
+            )
+            cursor = conn.cursor()
+            cursor.execute("SELECT descripcion FROM Generos")
+            generos = [row[0] for row in cursor.fetchall()]
+            return generos
+        except mysql.connector.Error as e:
+            messagebox.showerror("Error", f"No se pudo obtener los géneros: {e}")
+            return []
+        finally:
+            conn.close()
