@@ -1,30 +1,61 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk  # Necesario para cargar imágenes
+import ViewJugadores
 
 def abrir_view_clubes():
-    root.destroy()
-    import ViewClubes
+    root.withdraw()
+    try:
+        import ViewClubes
+        ViewClubes.crear_ventana(root)  # Llama a la función que muestra la ventana
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo abrir la vista de clubes: {e}")
+        root.deiconify()
 
 def abrir_view_jugadores():
-    root.destroy()
-    import ViewJugadores
+    try:
+        from ViewJugadores import LISTADO
+        ventana_jugadores = tk.Toplevel(root)  # Crear una ventana secundaria
+        ventana_jugadores.title("Listado de Jugadores")
+        vista_jugadores = LISTADO(ventana_jugadores, menu=root)  # Pasar el menú principal como argumento
+        vista_jugadores.pack(fill="both", expand=True)
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo abrir la vista de jugadores: {e}")
 
 def abrir_fixture():
-    root.destroy()
-    import FIxture
+    root.withdraw()
+    try:
+        import FIxture
+        FIxture.crear_ventana(root)  # Pasa la referencia de root
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo abrir el fixture: {e}")
+        root.deiconify()
 
 def abrir_historia():
-    root.destroy()
-    import HIstoria
-
-#def abrir_view_autoridades():
-    #root.destroy()
-    #import ViewAutoridades
-
+    root.withdraw()
+    try:
+        import Historia
+        Historia.main(root)  # Pasa la referencia para que Historia pueda volver al menú
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo abrir la historia: {e}")
+        root.deiconify()
 def abrir_reglamento():
-    root.destroy()
-    import Reglamentos
+    try:
+        import Reglamentos
+        print("Módulo Reglamentos importado correctamente.")
+        
+        # Crear una ventana secundaria para la visualización de PDF
+        ventana_reglamento = tk.Toplevel(root)
+        ventana_reglamento.title("Reglamento de la Liga")
+        
+        # Llamar a la función que crea el contenido de la ventana de reglamento, pasando la ventana secundaria
+        Reglamentos.crear_ventana(ventana_reglamento)
+        print("Función crear_ventana ejecutada.")
+        
+        ventana_reglamento.protocol("WM_DELETE_WINDOW", ventana_reglamento.destroy)
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo abrir el reglamento: {e}")
+
 
 def salir():
     root.quit()
@@ -62,9 +93,6 @@ button_fixture.grid(row=1, column=0, padx=20, pady=10)
 
 button_historia = tk.Button(frame_botones, text="Historia", font=("Calibri", 18), bg="#d3d3d3", command=abrir_historia, width=20)
 button_historia.grid(row=1, column=1, padx=20, pady=10)
-
-#button_ver_autoridades = tk.Button(frame_botones, text="Ver Autoridades", font=("Calibri", 18), bg="#d3d3d3", command=abrir_view_autoridades, width=20)
-#button_ver_autoridades.grid(row=2, column=0, padx=20, pady=10)
 
 button_reglamento = tk.Button(frame_botones, text="Reglamento", font=("Calibri", 18), bg="#d3d3d3", command=abrir_reglamento, width=20)
 button_reglamento.grid(row=2, column=1, padx=20, pady=10)
