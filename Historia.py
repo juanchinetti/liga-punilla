@@ -1,10 +1,8 @@
-
-
 import tkinter as tk
 from tkinter import messagebox
 
-def main(menu_principal=None):
-    root = tk.Tk()
+def crear_ventana(padre):
+    root = tk.Toplevel(padre)
     root.title("Historia")
     root.configure(bg="#ff7700")
 
@@ -27,23 +25,18 @@ def main(menu_principal=None):
     label_titulo = tk.Label(root, text="HISTORIA", font=("Calibri", 24, "bold"), bg="#ff7700")
     label_titulo.pack(pady=(20, 10))
 
-    # Ajustar el tamaño del widget Text para que no sea demasiado grande
+    # Texto
     text_widget = tk.Text(root, wrap="word", font=("Calibri", 20), bg="#d3d3d3", padx=10, pady=10, relief="flat", width=100, height=15)
     text_widget.insert(tk.END, texto_largo)
     text_widget.config(state=tk.DISABLED)  # Hacer que el texto no sea editable
     text_widget.pack(padx=10, pady=10)
 
-    def Volver_menu():
-        root.destroy()  # Cierra la ventana actual de "Historia"
-        if menu_principal:
-            menu_principal.deiconify()  # Muestra la ventana del menú principal si está disponible
+    def volver_menu():
+        root.destroy()  
+        padre.deiconify()   # Muestra de nuevo la ventana del menú principal
 
-    # Mantener visible el botón Volver
-    boton_volver = tk.Button(root, text="Volver", font=("Calibri", 24), bg="white", command=Volver_menu)
+    # Botón Volver
+    boton_volver = tk.Button(root, text="Volver", font=("Calibri", 24), bg="white", command=volver_menu)
     boton_volver.pack(pady=(30, 20))
 
     root.mainloop()
-
-if __name__ == "__main__":
-    main()
-
